@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>日本語形容詞練習ゲーム</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: "メイリオ", Meiryo, sans-serif;
+        }
+        body {
+            background-color: #f0f8ff;
+            padding: 20px;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .score-area {
+            text-align: right;
+            font-size: 22px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        .question-area {
+            font-size: 24px;
+            text-align: center;
+            margin: 30px 0;
+            line-height: 1.6;
+            min-height: 80px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+        }
+        .input-area {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+        input {
+            flex: 1;
+            padding: 15px;
+            font-size: 20px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .submit-btn {
+            background-color: #27ae60;
+            color: white;
+        }
+        .submit-btn:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        .next-btn {
+            background-color: #3498db;
+            color: white;
+            width: 100%;
+            display: none;
+        }
+        .feedback-area {
+            text-align: center;
+            font-size: 22px;
+            margin: 20px 0;
+            min-height: 60px;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .correct {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .wrong {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .finish-area {
+            text-align: center;
+            padding: 30px;
+            font-size: 24px;
+            display: none;
+        }
+        .restart-btn {
+            background-color: #e67e22;
+            color: white;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 得分区域 -->
+        <div class="score-area">
+            スコア: <span id="score">0</span>/20
+        </div>
+
+        <!-- 题目区域 -->
+        <div class="question-area" id="question"></div>
+
+        <!-- 输入区域 -->
+        <div class="input-area">
+            <input type="text" id="answer" placeholder="ひらがなだけ入力、漢字不可" disabled>
+            <button class="submit-btn" id="submitBtn" disabled>てんしゅつ</button>
+        </div>
+
+        <!-- 反馈区域 -->
+        <div class="feedback-area" id="feedback"></div>
+
+        <!-- 下一题按钮 -->
+        <button class="next-btn" id="nextBtn">つぎのもんだい</button>
+
+        <!-- 结束区域 -->
+        <div class="finish-area" id="finish">
+            <p>ゲームおわり！</p >
+            <p>さいごのスコア: <span id="finalScore"></span>/20</p >
+            <button class="restart-btn" id="restartBtn">もういちどやる</button>
+        </div>
+    </div>
+
+    <script>
+        // 题目库 说明：type对应题型 1=原形 2=现在否定 3=过去肯定 4=过去否定 5=て形并列 6=けど转折 所有形容词不重复
+        const questions = [
+            // 1.原形题型
+            {type:1, word:"あたたかい", eng:"warm", answer:"あたたかい"},
+            {type:1, word:"きれいな", eng:"beautiful", answer:"きれいな"},
+            // 2.现在否定题型
+            {type:2, word:"いそがしい", eng:"busy", answer:"いそがしくない"},
+            {type:2, word:"べんりな", eng:"convenient", answer:"べんりじゃない"},
+            {type:2, word:"たかい", eng:"expensive", answer:"たかくない"},
+            {type:2, word:"にぎやかな", eng:"lively", answer:"にぎやかじゃない"},
+            // 3.过去肯定题型
+            {type:3, word:"おもしろい", eng:"interesting", answer:"おもしろかった"},
+            {type:3, word:"げんきな", eng:"fine", answer:"げんきでした"},
+            {type:3, word:"さむい", eng:"cold", answer:"さむかった"},
+            {type:3, word:"すきな", eng:"favorite", answer:"すきでした"},
+            // 4.过去否定题型
+            {type:4, word:"むずかしい", eng:"difficult", answer:"むずかしくなかった"},
+            {type:4, word:"ひまな", eng:"free", answer:"ひまじゃなかった"},
+            {type:4, word:"わかい", eng:"young", answer:"わかくなかった"},
+            {type:4, word:"かんたんな", eng:"easy", answer:"かんたんじゃなかった"},
+            // 5.て形并列题型 前后词强相关
+            {type:5, desc:"spacious and quiet", a:"ひろい", aType:"i", b:"しずかな", bType:"na", answer:"ひろくてしずかで"},
+            {type:5, desc:"cute and fashionable", a:"かわいい", aType:"i", b:"おしゃれな", bType:"na", answer:"かわいくておしゃれで"},
+            {type:5, desc:"busy and tough", a:"いそがしい", aType:"i", b:"たいへんな", bType:"na", answer:"いそがしくてたいへんで"},
+            // 6.けど转折题型 两个意思相反形容词用but连接
+            {type:6, desc:"good but expensive", a:"いい", aType:"i", b:"たかい", bType:"i", answer:"いいけどたかい"},
+            {type:6, desc:"convenient but far", a:"べんりな", aType:"na", b:"とおい", bType:"i", answer:"べんりだけどとおい"},
+            {type:6, desc:"cheap but small", a:"やすい", aType:"i", b:"ちいさい", bType:"i", answer:"やすいけどちいさい"},
+        ];
+
+        // 全局变量
+        let currentQuestionIndex = -1; // 当前题目索引
+        let usedIndexes = []; // 已使用的题目索引 防止重复
+        let score = 0; // 当前得分
+
+        // DOM元素获取
+        const scoreEl = document.getElementById("score");
+        const questionEl = document.getElementById("question");
+        const answerEl = document.getElementById("answer");
+        const submitBtn = document.getElementById("submitBtn");
+        const feedbackEl = document.getElementById("feedback");
+        const nextBtn = document.getElementById("nextBtn");
+        const finishEl = document.getElementById("finish");
+        const finalScoreEl = document.getElementById("finalScore");
+        const restartBtn = document.getElementById("restartBtn");
+
+        // 初始化游戏
+        function initGame() {
+            currentQuestionIndex = -1;
+            usedIndexes = [];
+            score = 0;
+            scoreEl.textContent = score;
+            finishEl.style.display = "none";
+            nextBtn.style.display = "none";
+            feedbackEl.textContent = "";
+            feedbackEl.className = "feedback-area";
+            answerEl.value = "";
+            answerEl.disabled = false;
+            submitBtn.disabled = false;
+            loadNextQuestion();
+        }
+
+        // 加载下一题
+        function loadNextQuestion() {
+            // 所有题目都出完了
+            if (usedIndexes.length >= questions.length) {
+                showFinish();
+                return;
+            }
+            // 随机取未使用的题目
+            let randomIndex;
+            do {
+                randomIndex = Math.floor(Math.random() * questions.length);
+            } while (usedIndexes.includes(randomIndex));
+            usedIndexes.push(randomIndex);
+            currentQuestionIndex = randomIndex;
+            const q = questions[currentQuestionIndex];
+
+            // 根据题型显示题干 仅显示英文
+            let questionText = "";
+            switch(q.type) {
+                case 1:
+                    questionText = `「${q.eng}」のげんけいをひらがなでかいてください`;
+                    break;
+                case 2:
+                    questionText = `「${q.eng}」のげんざいひていけいをひらがなでかいてください`;
+                    break;
+                case 3:
+                    questionText = `「${q.eng}」のかここうていけいをひらがなでかいてください`;
+                    break;
+                case 4:
+                    questionText = `「${q.eng}」のかこひていけいをひらがなでかいてください`;
+                    break;
+                case 5:
+                    questionText = `「${q.desc}」のけいれつけい（てがた）をひらがなでかいてください`;
+                    break;
+                case 6:
+                    questionText = `「${q.desc}」のてんけつけい（けど）をひらがなでかいてください`;
+                    break;
+            }
+            questionEl.textContent = questionText;
+
+            // 重置界面状态
+            feedbackEl.textContent = "";
+            feedbackEl.className = "feedback-area";
+            answerEl.value = "";
+            answerEl.disabled = false;
+            submitBtn.disabled = false;
+            nextBtn.style.display = "none";
+        }
+
+        // 提交答案判断
+        function submitAnswer() {
+            const userAnswer = answerEl.value.trim();
+            const correctAnswer = questions[currentQuestionIndex].answer;
+
+            // 禁止提交空答案
+            if (userAnswer === "") return;
+
+            answerEl.disabled = true;
+            submitBtn.disabled = true;
+
+            // 判断对错
+            if (userAnswer === correctAnswer) {
+                score++;
+                scoreEl.textContent = score;
+                feedbackEl.textContent = "せいかい！";
+                feedbackEl.className = "feedback-area correct";
+            } else {
+                feedbackEl.textContent = `まちがい、せいかいは【${correctAnswer}】`;
+                feedbackEl.className = "feedback-area wrong";
+            }
+
+            // 显示下一题按钮
+            nextBtn.style.display = "block";
+        }
+
+        // 显示结束页面
+        function showFinish() {
+            finalScoreEl.textContent = score;
+            finishEl.style.display = "block";
+            answerEl.disabled = true;
+            submitBtn.disabled = true;
+            nextBtn.style.display = "none";
+        }
+
+        // 事件监听
+        // 提交按钮点击事件
+        submitBtn.addEventListener("click", submitAnswer);
+        // 回车禁用 阻止默认提交行为
+        answerEl.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                return false;
+            }
+        });
+        // 下一题按钮点击事件
+        nextBtn.addEventListener("click", loadNextQuestion);
+        // 重新开始按钮点击事件
+        restartBtn.addEventListener("click", initGame);
+
+        // 页面加载完成后初始化游戏
+        window.addEventListener("load", initGame);
+    </script>
+</body>
+</html>

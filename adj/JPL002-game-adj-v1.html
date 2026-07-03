@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>形容詞変形練習ゲーム</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: "Hiragino Kaku Gothic Pro", "メイリオ", sans-serif;
+        }
+        body {
+            background-color: #f0f8ff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .game-container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 600px;
+        }
+        .score-area {
+            font-size: 22px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            text-align: right;
+        }
+        .question-area {
+            font-size: 24px;
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #e8f4f8;
+            border-radius: 10px;
+            text-align: center;
+            line-height: 1.6;
+        }
+        .input-area {
+            margin-bottom: 20px;
+        }
+        .input-area input {
+            width: 100%;
+            padding: 15px;
+            font-size: 20px;
+            border: 2px solid #bdc3c7;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .input-area input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        .btn-area {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .btn {
+            flex: 1;
+            padding: 15px;
+            font-size: 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .submit-btn {
+            background-color: #27ae60;
+            color: white;
+        }
+        .submit-btn:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        .next-btn {
+            background-color: #3498db;
+            color: white;
+            display: none;
+        }
+        .result-area {
+            font-size: 22px;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            display: none;
+        }
+        .correct {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .wrong {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .notice {
+            font-size: 14px;
+            color: #7f8c8d;
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="score-area">スコア: <span id="score">0</span>/20</div>
+        <div class="question-area" id="question"></div>
+        <div class="input-area">
+            <input type="text" id="answer" placeholder="ひらがなだけ入力、漢字不可" autocomplete="off">
+        </div>
+        <div class="btn-area">
+            <button class="btn submit-btn" id="submitBtn">てんしゅつ</button>
+            <button class="btn next-btn" id="nextBtn">つぎのもんだい</button>
+        </div>
+        <div class="result-area" id="result"></div>
+        <div class="notice" id="notice"></div>
+    </div>
+
+    <script>
+        // 問題データベース 単語は全て重複しないように設定
+        const questions = [
+            // 原形問題
+            {
+                type: '原形',
+                adjectiveType: 'い',
+                wordEnglish: 'new',
+                correctAnswer: 'あたらしい'
+            },
+            {
+                type: '原形',
+                adjectiveType: 'な',
+                wordEnglish: 'beautiful',
+                correctAnswer: 'きれいな'
+            },
+            // 現在否定形問題
+            {
+                type: '現在否定形',
+                adjectiveType: 'い',
+                wordEnglish: 'hot',
+                correctAnswer: 'あつくない'
+            },
+            {
+                type: '現在否定形',
+                adjectiveType: 'な',
+                wordEnglish: 'quiet',
+                correctAnswer: 'しずかじゃない'
+            },
+            // 過去肯定形問題
+            {
+                type: '過去肯定形',
+                adjectiveType: 'い',
+                wordEnglish: 'cold',
+                correctAnswer: 'さむかった'
+            },
+            {
+                type: '過去肯定形',
+                adjectiveType: 'な',
+                wordEnglish: 'fine',
+                correctAnswer: 'げんきでした'
+            },
+            // 過去否定形問題
+            {
+                type: '過去否定形',
+                adjectiveType: 'い',
+                wordEnglish: 'difficult',
+                correctAnswer: 'むずかしくなかった'
+            },
+            {
+                type: '過去否定形',
+                adjectiveType: 'な',
+                wordEnglish: 'convenient',
+                correctAnswer: 'べんりじゃなかった'
+            },
+            // て形並列問題
+            {
+                type: 'て形並列',
+                structure: '【warm】+【interesting】',
+                adjectiveType: 'い+い',
+                correctAnswer: 'あたたかくておもしろい'
+            },
+            {
+                type: 'て形並列',
+                structure: '【cute】+【fashionable】',
+                adjectiveType: 'い+な',
+                correctAnswer: 'かわいくておしゃれな'
+            },
+            {
+                type: 'て形並列',
+                structure: '【famous】+【easy】',
+                adjectiveType: 'な+い',
+                correctAnswer: 'ゆうめいでかんたんな'
+            },
+            {
+                type: 'て形並列',
+                structure: '【lively】+【fun】',
+                adjectiveType: 'な+な',
+                correctAnswer: 'にぎやかでたのしい'
+            },
+            // けど転折問題
+            {
+                type: 'けど転折',
+                structure: '【cheap】けど【bad】',
+                adjectiveType: 'い+い',
+                correctAnswer: 'やすいけどわるい'
+            },
+            {
+                type: 'けど転折',
+                structure: '【good-looking】けど【not good at studying】',
+                adjectiveType: 'い+な',
+                correctAnswer: 'かっこいいけどにがてな'
+            },
+            {
+                type: 'けど転折',
+                structure: '【free】けど【boring】',
+                adjectiveType: 'な+い',
+                correctAnswer: 'ひまけどつまらない'
+            },
+            {
+                type: 'けど転折',
+                structure: '【various】けど【difficult】',
+                adjectiveType: 'な+な',
+                correctAnswer: 'いろいろけどむずかしい'
+            },
+            // 追加問題 単語重複なし
+            {
+                type: '過去肯定形',
+                adjectiveType: 'い',
+                wordEnglish: 'enjoyable',
+                correctAnswer: 'たのしかった'
+            },
+            {
+                type: '現在否定形',
+                adjectiveType: 'な',
+                wordEnglish: 'favorite',
+                correctAnswer: 'すきじゃない'
+            },
+            {
+                type: 'て形並列',
+                structure: '【small】+【round】',
+                adjectiveType: 'い+い',
+                correctAnswer: 'ちいさくてまるい'
+            },
+            {
+                type: 'けど転折',
+                structure: '【strong】けど【slow】',
+                adjectiveType: 'い+い',
+                correctAnswer: 'つよいけどおそい'
+            }
+        ];
+
+        // ゲーム状態変数
+        let currentQuestionIndex = null;
+        let usedQuestionIndexes = [];
+        let score = 0;
+        const totalQuestions = questions.length;
+
+        // DOM要素取得
+        const scoreElement = document.getElementById('score');
+        const questionElement = document.getElementById('question');
+        const answerInput = document.getElementById('answer');
+        const submitBtn = document.getElementById('submitBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const resultElement = document.getElementById('result');
+        const noticeElement = document.getElementById('notice');
+
+        // 初期化処理
+        function initGame() {
+            score = 0;
+            usedQuestionIndexes = [];
+            scoreElement.textContent = score;
+            loadNextQuestion();
+        }
+
+        // 次の問題を読み込む
+        function loadNextQuestion() {
+            // 全問題出題済みの場合
+            if (usedQuestionIndexes.length >= totalQuestions) {
+                questionElement.textContent = `全ての問題が終了しました！最終スコアは ${score}/${totalQuestions} です`;
+                answerInput.style.display = 'none';
+                submitBtn.style.display = 'none';
+                nextBtn.style.display = 'none';
+                resultElement.style.display = 'none';
+                noticeElement.textContent = 'ページをリロードすると再度プレイできます';
+                return;
+            }
+
+            // 未出題の問題からランダムに選ぶ
+            do {
+                currentQuestionIndex = Math.floor(Math.random() * totalQuestions);
+            } while (usedQuestionIndexes.includes(currentQuestionIndex));
+            usedQuestionIndexes.push(currentQuestionIndex);
+
+            const currentQuestion = questions[currentQuestionIndex];
+            
+            // 問題文表示
+            if (currentQuestion.type === 'て形並列' || currentQuestion.type === 'けど転折') {
+                questionElement.innerHTML = `${currentQuestion.type}に変形しなさい<br>${currentQuestion.structure}`;
+            } else {
+                questionElement.innerHTML = `${currentQuestion.type}に変形しなさい<br>意味: ${currentQuestion.wordEnglish}`;
+            }
+
+            // 入力欄リセット
+            answerInput.value = '';
+            answerInput.disabled = false;
+            submitBtn.disabled = false;
+            nextBtn.style.display = 'none';
+            resultElement.style.display = 'none';
+        }
+
+        // 回答判定処理
+        function checkAnswer() {
+            const userAnswer = answerInput.value.trim();
+            const correctAnswer = questions[currentQuestionIndex].correctAnswer;
+
+            submitBtn.disabled = true;
+            answerInput.disabled = true;
+            nextBtn.style.display = 'block';
+            resultElement.style.display = 'block';
+
+            if (userAnswer === correctAnswer) {
+                // 正解の場合
+                score++;
+                scoreElement.textContent = score;
+                resultElement.textContent = 'せいかい！';
+                resultElement.className = 'result-area correct';
+            } else {
+                // 不正解の場合
+                resultElement.textContent = `まちがい、せいかいは【${correctAnswer}】`;
+                resultElement.className = 'result-area wrong';
+            }
+        }
+
+        // エンターキー無効化処理
+        answerInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // イベントリスナー設定
+        submitBtn.addEventListener('click', checkAnswer);
+        nextBtn.addEventListener('click', loadNextQuestion);
+
+        // ゲーム開始
+        initGame();
+    </script>
+</body>
+</html>
+
+// TO DO: 
+// 1. 核对日语是否得体，完善中英日三语UI功能
+// 2. 删除ナ形容词原型的「な」

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>けいようしクイズ</title>
+<style>
+    body{
+        font-family: "Meiryo", "Hiragino Kaku Gothic ProN", sans-serif;
+        background:#f5f5ff;
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        padding:30px;
+    }
+    h1{color:#333;}
+    #quiz-box{
+        background:#fff;
+        border:1px solid #ccc;
+        border-radius:8px;
+        padding:20px 30px;
+        width:90%;
+        max-width:550px;
+        box-shadow:0 4px 8px rgba(0,0,0,0.1);
+    }
+    #question{
+        font-size:1.2em;
+        margin-bottom:15px;
+    }
+    #answer{
+        width:100%;
+        padding:10px;
+        font-size:1.1em;
+        border:1px solid #999;
+        border-radius:4px;
+    }
+    #buttons{
+        margin-top:15px;
+        display:flex;
+        gap:10px;
+    }
+    button{
+        flex:1;
+        padding:10px;
+        font-size:1em;
+        border:none;
+        border-radius:4px;
+        cursor:pointer;
+    }
+    #submitBtn{background:#4caf50;color:#fff;}
+    #nextBtn{background:#2196f3;color:#fff;display:none;}
+    #result{
+        margin-top:15px;
+        font-size:1.2em;
+        min-height:1.2em;
+    }
+    #score{
+        font-size:1.2em;
+        margin-bottom:10px;
+        text-align:right;
+    }
+</style>
+</head>
+<body>
+
+<h1>けいようしクイズ</h1>
+
+<div id="quiz-box">
+    <div id="score">スコア: 0 / 0</div>
+    <div id="question">ロード中...</div>
+    <input id="answer" type="text" placeholder="ひらがなだけ入力、漢字不可" autocomplete="off">
+    <div id="buttons">
+        <button id="submitBtn">てんしゅつ</button>
+        <button id="nextBtn">つぎのもんだい</button>
+    </div>
+    <div id="result"></div>
+</div>
+
+<script>
+// ===========================
+// けいようしクイズ本体       （以下中文コメントあり）
+// ===========================
+
+// 1. 問題データ（全20問、形容詞重複なし、答えは純ひらがな）
+const questions = [
+    {q:"「あたらしい」の原形を入力してください。",                            a:"あたらしい"},
+    {q:"「しずかな」の原形を入力してください。",                                a:"しずかな"},
+    {q:"「たかい」の現在否定形を入力してください。",                            a:"たかくない"},
+    {q:"「げんきな」の現在否定形を入力してください。",                          a:"げんきじゃない"},
+    {q:"「あつい」の過去肯定形を入力してください。",                            a:"あつかった"},
+    {q:"「きれいな」の過去肯定形を入力してください。",                          a:"きれいでした"},
+    {q:"「さむい」の過去否定形を入力してください。",                            a:"さむくなかった"},
+    {q:"「べんりな」の過去否定形を入力してください。",                          a:"べんりじゃなかった"},
+    {q:"次の形容詞をて形で並べてください：あぶない ＋ おそい",                 a:"あぶなくておそい"},
+    {q:"次の形容詞をて形で並べてください：むずかしい ＋ おもしろい",             a:"むずかしくておもしろい"},
+    {q:"次の形容詞をて形で並べてください：にぎやかな ＋ たのしい",               a:"にぎやかでたのしい"},
+    {q:"次の形容詞をて形で並べてください：かんたんな ＋ ひまな",                 a:"かんたんでひま"},
+    {q:"「ちいさい」「つよい」を使い、けど を含む文を完成してください。",         a:"ちいさいけどつよい"},
+    {q:"「ゆうめいな」「おしゃれな」を使い、けど を含む文を完成してください。",   a:"ゆうめいだけどおしゃれ"},
+    {q:"「ふるい」「めずらしい」を使い、けど を含む文を完成してください。",       a:"ふるいけどめずらしい"},
+    {q:"「むしあつい」の原形を入力してください。",                              a:"むしあつい"},
+    {q:"「まっすぐな」の原形を入力してください。",                              a:"まっすぐな"},
+    {q:"「はやい」の現在否定形を入力してください。",                            a:"はやくない"},
+    {q:"「とおい」の過去肯定形を入力してください。",                            a:"とおかった"},
+    {q:"「すきな」の過去否定形を入力してください。",                            a:"すきじゃなかった"}
+];
+
+// 2. 問題をランダムにシャッフル（フィッシャー–イェーツ）
+function shuffle(arr){
+    for(let i=arr.length-1;i>0;i--){
+        const j=Math.floor(Math.random()*(i+1));
+        [arr[i],arr[j]]=[arr[j],arr[i]];
+    }
+}
+shuffle(questions);
+
+// 3. 状態管理用変数
+let current = 0;            // 現在のインデックス
+let score   = 0;            // 正解数
+
+// 4. DOM 要素取得
+const questionEl = document.getElementById("question");
+const answerEl   = document.getElementById("answer");
+const submitBtn  = document.getElementById("submitBtn");
+const nextBtn    = document.getElementById("nextBtn");
+const resultEl   = document.getElementById("result");
+const scoreEl    = document.getElementById("score");
+
+// 5. 初期表示
+loadQuestion();
+
+// 6. 質問読み込み関数
+function loadQuestion(){
+    // すべて終了した場合
+    if(current >= questions.length){
+        questionEl.textContent = "ぜんぶおわり！";
+        resultEl.textContent   = "";
+        submitBtn.style.display = "none";
+        nextBtn.style.display   = "none";
+        scoreEl.textContent     = `スコア: ${score} / ${questions.length}`;
+        return;
+    }
+    // 現在の問題を表示
+    questionEl.textContent = questions[current].q;
+    answerEl.value = "";
+    answerEl.disabled = false;
+    submitBtn.disabled = false;
+    nextBtn.style.display = "none";
+    resultEl.textContent = "";
+    scoreEl.textContent = `スコア: ${score} / ${current}`;
+    answerEl.focus();
+}
+
+// 7. 解答判定
+submitBtn.addEventListener("click", () =>{
+    const userAns = answerEl.value.trim();
+    const correct = questions[current].a;
+    // 入力空チェック
+    if(userAns===""){answerEl.focus();return;}
+
+    if(userAns === correct){
+        resultEl.textContent = "せいかい！";
+        score++;
+    }else{
+        resultEl.textContent = `まちがい、せいかいは「${correct}」`;
+    }
+    // ボタン状態切替
+    answerEl.disabled = true;
+    submitBtn.disabled = true;
+    nextBtn.style.display = "inline-block";
+    scoreEl.textContent = `スコア: ${score} / ${current+1}`;
+});
+
+// 8. 次の問題へ
+nextBtn.addEventListener("click", ()=>{
+    current++;
+    loadQuestion();
+});
+
+// 9. Enter キーで送信
+answerEl.addEventListener("keydown", e=>{
+    if(e.key==="Enter" && !submitBtn.disabled){
+        submitBtn.click();
+    }
+});
+</script>
+</body>
+</html>
