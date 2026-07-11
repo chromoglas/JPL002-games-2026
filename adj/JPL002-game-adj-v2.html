@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>形容詞練習クイズ</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: "Noto Sans JP", sans-serif;
+        }
+        body {
+            background-color: #f7f8fc;
+            padding: 40px 20px;
+        }
+        .wrap {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .home-screen {
+            display: block;
+        }
+        .quiz-screen {
+            display: none;
+        }
+        h1 {
+            text-align: center;
+            font-size: 38px;
+            color: #222;
+            margin-bottom: 40px;
+        }
+        .section-title {
+            font-size: 24px;
+            margin: 30px 0 16px;
+            color: #333;
+        }
+        .btn-group {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .mode-btn {
+            padding: 14px 24px;
+            font-size: 18px;
+            border: none;
+            border-radius: 8px;
+            background: #e2e8f0;
+            cursor: pointer;
+        }
+        .mode-btn.active {
+            background: #3b82f6;
+            color: white;
+        }
+        .start-btn {
+            width: 100%;
+            padding: 18px;
+            font-size: 22px;
+            margin-top: 40px;
+            border: none;
+            border-radius: 10px;
+            background: #10b981;
+            color: white;
+            cursor: pointer;
+        }
+        .card {
+            background: white;
+            padding: 36px 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 14px #e0e5ef;
+        }
+        .score-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 24px;
+            margin-bottom: 30px;
+        }
+        .timer-text {
+            color: #ef4444;
+            font-weight: bold;
+        }
+        .q-box {
+            background: #edf2fb;
+            padding: 30px 20px;
+            border-radius: 10px;
+            font-size: 26px;
+            text-align: center;
+            margin-bottom: 26px;
+            line-height: 1.8;
+        }
+        #ans-input {
+            width: 100%;
+            padding: 16px 14px;
+            font-size: 20px;
+            border: 1px solid #bbb;
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+        .operate-buttons {
+            display: flex;
+            gap: 16px;
+        }
+        #check-btn {
+            flex: 1;
+            padding: 16px;
+            font-size: 20px;
+            border: none;
+            border-radius: 8px;
+            background: #22c55e;
+            color: white;
+            cursor: pointer;
+        }
+        #next-btn {
+            width: 180px;
+            padding: 16px;
+            font-size: 20px;
+            border: none;
+            border-radius: 8px;
+            background: #64748b;
+            color: white;
+            cursor: pointer;
+        }
+        .feedback {
+            margin-top: 28px;
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .correct {
+            color: #16a34a;
+        }
+        .wrong {
+            color: #dc2626;
+        }
+        .back-home {
+            margin-top: 30px;
+            width: 100%;
+            padding: 12px;
+            font-size: 18px;
+            border: 1px solid #999;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <div class="home-screen" id="home">
+        <h1>形容詞練習クイズ</h1>
+        <div class="section-title">1. 基本モードを選択</div>
+        <div class="btn-group" id="base-mode-group">
+            <button class="mode-btn base-mode" data-val="study">学習モード（時間制限なし）</button>
+            <button class="mode-btn base-mode" data-val="challenge">チャレンジモード（1問20秒）</button>
+        </div>
+
+        <div class="section-title">2. 練習区分を選択</div>
+        <div class="btn-group" id="sort-group">
+            <button class="mode-btn sort-type" data-val="lesson">授業進度別</button>
+            <button class="mode-btn sort-type" data-val="grammar">文法タイプ別</button>
+            <button class="mode-btn sort-type" data-val="diff">難易度別</button>
+        </div>
+
+        <div class="section-title">3. 詳細オプション</div>
+        <div class="btn-group opt-lesson opt-panel" style="display:none;">
+            <button class="mode-btn opt-item" data-val="stage1">段階1：原形・現在否定形</button>
+            <button class="mode-btn opt-item" data-val="stage2">段階2：過去形・過去否定形</button>
+            <button class="mode-btn opt-item" data-val="stage3">段階3：て形並列文</button>
+            <button class="mode-btn opt-item" data-val="stage4">段階4：けど・だけど転折文</button>
+        </div>
+        <div class="btn-group opt-grammar opt-panel" style="display:none;">
+            <button class="mode-btn opt-item" data-val="original">原形</button>
+            <button class="mode-btn opt-item" data-val="neg">現在否定</button>
+            <button class="mode-btn opt-item" data-val="past">過去形</button>
+            <button class="mode-btn opt-item" data-val="te">て形並列</button>
+            <button class="mode-btn opt-item" data-val="kedo">転折文（けど/だけど）</button>
+        </div>
+        <div class="btn-group opt-diff opt-panel" style="display:none;">
+            <button class="mode-btn opt-item" data-val="easy">Easy Mode（基礎単語のみ）</button>
+            <button class="mode-btn opt-item" data-val="mixed">Mixed Mode（全文法混合）</button>
+        </div>
+
+        <button class="start-btn" id="start-quiz">クイズを開始</button>
+    </div>
+
+    <div class="quiz-screen" id="quiz-page">
+        <div class="card">
+            <div class="score-row">
+                <div>スコア：<span id="score-num">0</span></div>
+                <div class="timer-text" id="timer-area"></div>
+            </div>
+            <div class="q-box" id="question-area"></div>
+            <input id="ans-input" placeholder="ひらがなだけ入力、漢字不可">
+            <div class="operate-buttons">
+                <button id="check-btn">チェック</button>
+                <button id="next-btn">次の問題</button>
+            </div>
+            <div class="feedback" id="feed-text"></div>
+            <button class="back-home" onclick="backToHome()">ホームに戻る</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// 全局变量
+let baseMode = null;
+let sortMain = null;
+let subOpt = null;
+let score = 0;
+let currentQ = null;
+let timerId = null;
+let remainTime = 20;
+let fullFilterPool = [];
+let recentWordList = [];
+const RECENT_MAX = 5;
+
+// 均匀洗牌算法
+function shuffleArray(arr) {
+    const copy = [...arr];
+    for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+}
+
+// ==================== 修正后题库：にがて释义简化+无极端矛盾转折搭配 ====================
+const fullBank = [
+    // ========== 段階1：原形・現在否定形 ==========
+    {type:"original", base:"あたたかい", en:"warm", jp:"あたたかい", stage:1, diff:"easy"},
+    {type:"original", base:"あたらしい", en:"new", jp:"あたらしい", stage:1, diff:"easy"},
+    {type:"original", base:"あつい", en:"hot", jp:"あつい", stage:1, diff:"easy"},
+    {type:"original", base:"しろい", en:"white", jp:"しろい", stage:1, diff:"easy"},
+    {type:"original", base:"きれい", en:"beautiful", jp:"きれい", stage:1, diff:"easy"},
+    {type:"original", base:"すき", en:"favorite", jp:"すき", stage:1, diff:"easy"},
+    {type:"original", base:"やすい", en:"cheap", jp:"やすい", stage:1, diff:"easy"},
+    {type:"original", base:"かわいい", en:"cute", jp:"かわいい", stage:1, diff:"easy"},
+    {type:"original", base:"しずか", en:"quiet", jp:"しずか", stage:1, diff:"easy"},
+    {type:"original", base:"べんり", en:"convenient", jp:"べんり", stage:1, diff:"mixed"},
+    {type:"original", base:"きらい", en:"dislike", jp:"きらい", stage:1, diff:"mixed"},
+    {type:"original", base:"にぎやか", en:"lively", jp:"にぎやか", stage:1, diff:"mixed"},
+    {type:"original", base:"にがて", en:"not good at", jp:"にがて", stage:1, diff:"mixed"},
+    // 現在否定
+    {type:"neg", base:"やすい", en:"not cheap", jp:"やすくない", stage:1, diff:"easy"},
+    {type:"neg", base:"しずか", en:"not quiet", jp:"しずかじゃない", stage:1, diff:"easy"},
+    {type:"neg", base:"あつい", en:"not hot", jp:"あつくない", stage:1, diff:"easy"},
+    {type:"neg", base:"すき", en:"not favorite", jp:"すきじゃない", stage:1, diff:"easy"},
+    {type:"neg", base:"きれい", en:"not beautiful", jp:"きれいじゃない", stage:1, diff:"mixed"},
+    {type:"neg", base:"にがて", en:"not not good at", jp:"にがてじゃない", stage:1, diff:"mixed"},
+
+    // ========== 段階2：過去形・過去否定形 ==========
+    {type:"past", base:"やすい", en:"was cheap", jp:"やすかった", stage:2, diff:"easy"},
+    {type:"past", base:"しずか", en:"was quiet", jp:"しずかでした", stage:2, diff:"easy"},
+    {type:"past", base:"たのしい", en:"was fun", jp:"たのしかった", stage:2, diff:"easy"},
+    {type:"past", base:"たのしい", en:"was not fun", jp:"たのしくなかった", stage:2, diff:"mixed"},
+    {type:"past", base:"おしゃれ", en:"was fashionable", jp:"おしゃれでした", stage:2, diff:"mixed"},
+    {type:"past", base:"きれい", en:"was not beautiful", jp:"きれいじゃなかった", stage:2, diff:"mixed"},
+
+    // ========== 段階3：て形並列文 ==========
+    {type:"te", base:"ちいさい+ふるい", en:"small and old", jp:"ちいさくてふるい", stage:3, diff:"easy"},
+    {type:"te", base:"しろい+きれい", en:"white and beautiful", jp:"しろくてきれい", stage:3, diff:"easy"},
+    {type:"te", base:"あかい+かわいい", en:"red and cute", jp:"あかくてかわいい", stage:3, diff:"easy"},
+    {type:"te", base:"おもしろい+おしゃれ", en:"interesting and fashionable", jp:"おもしろくておしゃれ", stage:3, diff:"mixed"},
+    {type:"te", base:"すずしい+げんき", en:"cool and energetic", jp:"すずしくてげんき", stage:3, diff:"mixed"},
+
+    // ========== 段階4：けど/だけど転折文（全部替换温和合理搭配，删除完全对立词组） ==========
+    {type:"kedo", base:"やすい+ちいさい", en:"cheap but small", jp:"やすいけどちいさい", stage:4, diff:"easy"},
+    {type:"kedo", base:"たかい+きれい", en:"expensive but beautiful", jp:"たかいけどきれい", stage:4, diff:"mixed"},
+    {type:"kedo", base:"かっこいい+にがて", en:"cool but not good at", jp:"かっこいいけどにがて", stage:4, diff:"mixed"},
+    {type:"kedo", base:"しずか+べんり", en:"quiet but convenient", jp:"しずかだけどべんり", stage:4, diff:"easy"},
+    {type:"kedo", base:"おしゃれ+むずかしい", en:"fashionable but difficult", jp:"おしゃれだけどむずかしい", stage:4, diff:"mixed"},
+    {type:"kedo", base:"ひろい+たいへん", en:"spacious but tough", jp:"ひろいけどたいへん", stage:4, diff:"mixed"},
+
+    // 扩容补充基础词
+    {type:"original", base:"くろい", en:"black", jp:"くろい", stage:1, diff:"easy"},
+    {type:"original", base:"あおい", en:"blue", jp:"あおい", stage:1, diff:"easy"},
+    {type:"original", base:"きいろい", en:"yellow", jp:"きいろい", stage:1, diff:"easy"},
+    {type:"original", base:"ながい", en:"long", jp:"ながい", stage:1, diff:"easy"},
+    {type:"original", base:"ちいさい", en:"small", jp:"ちいさい", stage:1, diff:"easy"},
+    {type:"neg", base:"ながい", en:"not long", jp:"ながくない", stage:1, diff:"easy"},
+    {type:"neg", base:"ちいさい", en:"not small", jp:"ちいさくない", stage:1, diff:"easy"},
+    {type:"past", base:"ながい", en:"was long", jp:"ながかった", stage:2, diff:"easy"},
+    {type:"past", base:"ちいさい", en:"was small", jp:"ちいさかった", stage:2, diff:"easy"},
+    {type:"te", base:"くろい+ながい", en:"black and long", jp:"くろくてながい", stage:3, diff:"easy"},
+    {type:"kedo", base:"ながい+ひろい", en:"long but spacious", jp:"ながいけどひろい", stage:4, diff:"easy"},
+];
+
+// 筛选题目池
+function getFilteredFullPool() {
+    let list = [...fullBank];
+    if(sortMain === "lesson") {
+        const sNum = parseInt(subOpt.replace("stage",""));
+        list = list.filter(item => item.stage === sNum);
+    } else if(sortMain === "grammar") {
+        list = list.filter(item => item.type === subOpt);
+    } else if(sortMain === "diff") {
+        if(subOpt === "easy") list = list.filter(item => item.diff === "easy");
+    }
+    return shuffleArray(list);
+}
+
+// 抽取下一题，完整池用完才循环，避开近期单词
+function pickNextQuestion() {
+    if(fullFilterPool.length <= 0) {
+        fullFilterPool = getFilteredFullPool();
+        recentWordList = [];
+    }
+    let target = null;
+    while(fullFilterPool.length > 0) {
+        const candidate = fullFilterPool.shift();
+        if(!recentWordList.includes(candidate.base)) {
+            target = candidate;
+            break;
+        } else {
+            fullFilterPool.push(candidate);
+        }
+    }
+    if(target) {
+        recentWordList.push(target.base);
+        if(recentWordList.length > RECENT_MAX) recentWordList.shift();
+    }
+    return target;
+}
+
+// 加载新题目
+function loadNewQuestion() {
+    clearInterval(timerId);
+    currentQ = pickNextQuestion();
+    document.getElementById("question-area").innerText = `意味：${currentQ.en}`;
+    document.getElementById("ans-input").value = "";
+    document.getElementById("feed-text").innerText = "";
+    if(baseMode === "challenge") startTimer();
+}
+
+// 20秒倒计时
+function startTimer() {
+    clearInterval(timerId);
+    remainTime = 20;
+    document.getElementById("timer-area").innerText = `残り時間：${remainTime}秒`;
+    timerId = setInterval(()=>{
+        remainTime--;
+        document.getElementById("timer-area").innerText = `残り時間：${remainTime}秒`;
+        if(remainTime <= 0) {
+            clearInterval(timerId);
+            document.getElementById("feed-text").className = "feedback wrong";
+            document.getElementById("feed-text").innerText = `時間切れ！せいかいは【${currentQ.jp}】`;
+            setTimeout(loadNewQuestion,1200);
+        }
+    },1000);
+}
+
+// 点击チェック判分
+document.getElementById("check-btn").onclick = function(){
+    const userInput = document.getElementById("ans-input").value.trim();
+    const correct = currentQ.jp;
+    const feedDom = document.getElementById("feed-text");
+    clearInterval(timerId);
+    if(userInput === correct) {
+        score += 10;
+        document.getElementById("score-num").innerText = score;
+        feedDom.className = "feedback correct";
+        feedDom.innerText = "せいかい！";
+    } else {
+        feedDom.className = "feedback wrong";
+        feedDom.innerText = `まちがい、せいかいは【${correct}】`;
+    }
+}
+
+document.getElementById("next-btn").onclick = loadNewQuestion;
+
+// 返回首页重置全部数据
+function backToHome(){
+    clearInterval(timerId);
+    document.getElementById("quiz-page").style.display = "none";
+    document.getElementById("home").style.display = "block";
+    document.querySelectorAll(".mode-btn").forEach(b=>b.classList.remove("active"));
+    document.querySelectorAll(".opt-panel").forEach(p=>p.style.display="none");
+    baseMode = null; sortMain = null; subOpt = null;
+    fullFilterPool = [];
+    recentWordList = [];
+    score = 0;
+}
+
+// 首页按钮选中逻辑
+document.querySelectorAll(".base-mode").forEach(btn=>{
+    btn.onclick = ()=>{
+        document.querySelectorAll(".base-mode").forEach(b=>b.classList.remove("active"));
+        btn.classList.add("active");
+        baseMode = btn.dataset.val;
+    }
+})
+document.querySelectorAll(".sort-type").forEach(btn=>{
+    btn.onclick = ()=>{
+        document.querySelectorAll(".sort-type").forEach(b=>b.classList.remove("active"));
+        btn.classList.add("active");
+        sortMain = btn.dataset.val;
+        document.querySelectorAll(".opt-panel").forEach(p=>p.style.display="none");
+        if(sortMain === "lesson") document.querySelector(".opt-lesson").style.display="flex";
+        if(sortMain === "grammar") document.querySelector(".opt-grammar").style.display="flex";
+        if(sortMain === "diff") document.querySelector(".opt-diff").style.display="flex";
+        subOpt = null;
+        document.querySelectorAll(".opt-item").forEach(o=>o.classList.remove("active"));
+    }
+})
+document.querySelectorAll(".opt-item").forEach(btn=>{
+    btn.onclick = ()=>{
+        const parent = btn.parentElement;
+        parent.querySelectorAll(".opt-item").forEach(b=>b.classList.remove("active"));
+        btn.classList.add("active");
+        subOpt = btn.dataset.val;
+    }
+})
+
+// 开始游戏
+document.getElementById("start-quiz").onclick = function(){
+    if(!baseMode || !sortMain || !subOpt){
+        alert("モード・区分・詳細オプションをすべて選択してください");
+        return;
+    }
+    document.getElementById("home").style.display = "none";
+    document.getElementById("quiz-page").style.display = "block";
+    score = 0;
+    fullFilterPool = [];
+    recentWordList = [];
+    document.getElementById("score-num").innerText = score;
+    loadNewQuestion();
+}
+
+// 禁止回车自动提交
+document.getElementById("ans-input").addEventListener("keydown", e=>{
+    if(e.key === "Enter") e.preventDefault();
+})
+</script>
+</body>
+</html>
