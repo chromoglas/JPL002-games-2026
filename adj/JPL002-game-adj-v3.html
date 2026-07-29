@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Adjective Quiz 形容詞クイズ</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: "Noto Sans JP", sans-serif;
+        }
+        body {
+            background-color: #f7f8fc;
+            padding: 40px 20px;
+        }
+        .wrap {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .lang-switch-box {
+            text-align: right;
+            margin-bottom:20px;
+        }
+        .lang-btn {
+            padding:8px 16px;
+            font-size:16px;
+            border-radius:6px;
+            border:1px solid #3b82f6;
+            background:#fff;
+            color:#3b82f6;
+            cursor:pointer;
+            margin-left:8px;
+        }
+        .lang-btn.active {
+            background:#3b82f6;
+            color:#fff;
+        }
+        .home-screen {
+            display: block;
+        }
+        .quiz-screen {
+            display: none;
+        }
+        .summary-screen {
+            display: none;
+        }
+        h1 {
+            text-align: center;
+            font-size: 38px;
+            color: #222;
+            margin-bottom: 40px;
+        }
+        .section-title {
+            font-size: 24px;
+            margin: 30px 0 16px;
+            color: #333;
+        }
+        .btn-group {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .mode-btn {
+            padding: 14px 24px;
+            font-size: 18px;
+            border: none;
+            border-radius: 8px;
+            background: #e2e8f0;
+            cursor: pointer;
+        }
+        .mode-btn.active {
+            background: #3b82f6;
+            color: white;
+        }
+        .start-btn {
+            width: 100%;
+            padding: 18px;
+            font-size: 22px;
+            margin-top: 40px;
+            border: none;
+            border-radius: 10px;
+            background: #10b981;
+            color: white;
+            cursor: pointer;
+        }
+        .card {
+            background: white;
+            padding: 36px 30px;
+            border-radius: 12;
+            box-shadow: 0 2px 14px #e0e5ef;
+        }
+        .score-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 24px;
+            margin-bottom: 30px;
+        }
+        .timer-text {
+            color: #ef4444;
+            font-weight: bold;
+        }
+        .q-box {
+            background: #edf2fb;
+            padding: 30px 20px;
+            border-radius: 10px;
+            font-size: 26px;
+            text-align: center;
+            margin-bottom: 10px;
+            line-height: 1.8;
+        }
+        .input-tip {
+            font-size: 16px;
+            color:#666;
+            margin-bottom:12px;
+        }
+        #ans-input {
+            width: 100%;
+            padding: 16px 14px;
+            font-size: 20px;
+            border: 1px solid #bbb;
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+        .operate-buttons {
+            display: flex;
+            gap: 16px;
+        }
+        #skip-btn {
+            width: 140px;
+            padding: 16px;
+            font-size: 20px;
+            border: 1px solid #999;
+            border-radius: 8px;
+            background: #fff;
+            cursor: pointer;
+        }
+        #check-btn {
+            flex: 1;
+            padding: 16px;
+            font-size: 20px;
+            border: none;
+            border-radius: 8px;
+            background: #22c55e;
+            color: white;
+            cursor: pointer;
+        }
+        #continue-btn {
+            width: 100%;
+            padding: 16px;
+            font-size: 20px;
+            border: none;
+            border-radius: 8px;
+            background: #64748b;
+            color: white;
+            cursor: pointer;
+            display:none;
+        }
+        .feedback {
+            margin-top: 28px;
+            font-size: 20px;
+            font-weight: normal;
+            color:#dc2626;
+        }
+        .feedback.correct-text{
+            color:#16a34a;
+        }
+        .note-text {
+            margin-top:12px;
+            font-size:18px;
+            color:#d97706;
+        }
+        .bottom-btn-group {
+            display:flex;
+            gap:12px;
+            margin-top:30px;
+        }
+        .back-home {
+            flex:1;
+            padding: 12px;
+            font-size: 18px;
+            border: 1px solid #999;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+        }
+        .end-session-btn {
+            flex:1;
+            padding:12px;
+            font-size:18px;
+            border:none;
+            border-radius:8px;
+            background:#dc2626;
+            color:#fff;
+            cursor:pointer;
+        }
+        .summary-title{
+            font-size:28px;
+            margin-bottom:24px;
+        }
+        .summary-stat-line{
+            font-size:22px;
+            margin:8px 0;
+        }
+        .mistake-table{
+            width:100%;
+            border-collapse: collapse;
+            margin:24px 0;
+        }
+        .mistake-table th,.mistake-table td{
+            border:1px solid #ddd;
+            padding:10px;
+            font-size:17px;
+            text-align:center;
+        }
+        .mistake-table th{
+            background:#f3f4f6;
+        }
+        .summary-btn-group{
+            display:flex;
+            gap:16px;
+            margin-top:20px;
+        }
+        .practice-mistake-btn{
+            flex:1;
+            padding:12px;
+            font-size:18px;
+            border:none;
+            border-radius:8px;
+            background:#64748b;
+            color:#fff;
+            cursor:pointer;
+        }
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <div class="lang-switch-box">
+        <button class="lang-btn" id="lang-ja">日本語</button>
+        <button class="lang-btn" id="lang-en">English</button>
+    </div>
+
+    <div class="home-screen" id="home">
+        <h1 data-i18n="title"></h1>
+        <div class="section-title" data-i18n="step1"></div>
+        <div class="btn-group" id="base-mode-group">
+            <button class="mode-btn base-mode" data-val="study" data-i18n="modeStudy"></button>
+            <button class="mode-btn base-mode" data-val="challenge" data-i18n="modeChallenge"></button>
+        </div>
+
+        <div class="section-title" data-i18n="step2"></div>
+        <div class="btn-group" id="sort-group">
+            <button class="mode-btn sort-type" data-val="lesson" data-i18n="sortLesson"></button>
+            <button class="mode-btn sort-type" data-val="grammar" data-i18n="sortGrammar"></button>
+            <button class="mode-btn sort-type" data-val="diff" data-i18n="sortDiff"></button>
+        </div>
+
+        <div class="section-title" data-i18n="step3"></div>
+        <div class="btn-group opt-lesson opt-panel" style="display:none;">
+            <button class="mode-btn opt-item" data-val="stage1" data-i18n="stage1"></button>
+            <button class="mode-btn opt-item" data-val="stage2" data-i18n="stage2"></button>
+            <button class="mode-btn opt-item" data-val="stage3" data-i18n="stage3"></button>
+            <button class="mode-btn opt-item" data-val="stage4" data-i18n="stage4"></button>
+        </div>
+        <div class="btn-group opt-grammar opt-panel" style="display:none;">
+            <button class="mode-btn opt-item" data-val="original" data-i18n="gOriginal"></button>
+            <button class="mode-btn opt-item" data-val="neg" data-i18n="gNeg"></button>
+            <button class="mode-btn opt-item" data-val="past" data-i18n="gPast"></button>
+            <button class="mode-btn opt-item" data-val="te" data-i18n="gTe"></button>
+            <button class="mode-btn opt-item" data-val="kedo" data-i18n="gKedo"></button>
+        </div>
+        <div class="btn-group opt-diff opt-panel" style="display:none;">
+            <button class="mode-btn opt-item" data-val="easy" data-i18n="diffEasy"></button>
+            <button class="mode-btn opt-item" data-val="mixed" data-i18n="diffMixed"></button>
+        </div>
+
+        <button class="start-btn" id="start-quiz" data-i18n="startBtn"></button>
+    </div>
+
+    <div class="quiz-screen" id="quiz-page">
+        <div class="card">
+            <div class="score-row">
+                <span data-i18n="scoreText"></span><span id="score-num">0</span>
+                <div class="timer-text" id="timer-area"></div>
+            </div>
+            <div class="q-box" id="question-area"></div>
+            <div class="input-tip" data-i18n="inputTip"></div>
+            <input id="ans-input">
+            <div class="operate-buttons" id="doubleBtns">
+                <button id="skip-btn" data-i18n="skipBtn"></button>
+                <button id="check-btn" data-i18n="checkBtn"></button>
+            </div>
+            <button id="continue-btn" data-i18n="continueBtn"></button>
+            <div class="feedback" id="feed-text"></div>
+            <div class="note-text" id="note-area"></div>
+            <div class="bottom-btn-group">
+                <button class="back-home" onclick="backToHome()" data-i18n="backBtn"></button>
+                <button class="end-session-btn" onclick="showSummary()" data-i18n="endSessionBtn"></button>
+            </div>
+        </div>
+    </div>
+
+    <div class="summary-screen card" id="summary-page">
+        <div class="summary-title" data-i18n="summaryTitle"></div>
+        <div class="summary-stat-line">
+            <span data-i18n="sumAttempt"></span><span id="sumAttemptNum"></span>
+            &nbsp;&nbsp;
+            <span data-i18n="sumCorrect"></span><span id="sumCorrectNum"></span>
+            &nbsp;&nbsp;
+            <span data-i18n="sumWrong"></span><span id="sumWrongNum"></span>
+            &nbsp;&nbsp;
+            <span data-i18n="sumScore"></span><span id="sumScoreNum"></span>
+        </div>
+
+        <h3 style="margin:24px 0 10px" data-i18n="mistakeHeader"></h3>
+        <table class="mistake-table" id="mistakeTableWrap">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th data-i18n="tblEn"></th>
+                    <th data-i18n="tblQuestion"></th>
+                    <th data-i18n="tblAnswer"></th>
+                    <th data-i18n="tblUserAns"></th>
+                </tr>
+            </thead>
+            <tbody id="mistakeTableBody">
+            </tbody>
+        </table>
+
+        <div class="summary-btn-group">
+            <button class="practice-mistake-btn" id="practiceMistakeBtn" data-i18n="practiceMistakeBtn"></button>
+            <button class="back-home" onclick="backToHome()" data-i18n="backBtn"></button>
+        </div>
+    </div>
+</div>
+
+<script>
+const langData = {
+    ja: {
+        title:"形容詞クイズ",
+        step1:"1. 基本モードを選択",
+        step2:"2. 練習区分を選択",
+        step3:"3. 詳細オプション",
+        modeStudy:"学習モード（無制限時限）",
+        modeChallenge:"チャレンジモード（1問20秒）",
+        sortLesson:"授業進度別",
+        sortGrammar:"文法タイプ別",
+        sortDiff:"難易度別",
+        stage1:"段階1：原形・現在否定形",
+        stage2:"段階2：過去形・過去否定形",
+        stage3:"段階3：くて・で並列文",
+        stage4:"段階4：けど・だけど転折文",
+        gOriginal:"原形",
+        gNeg:"現在否定",
+        gPast:"過去形",
+        gTe:"くて・で並列",
+        gKedo:"転折文（けど/だけど）",
+        diffEasy:"基礎モード",
+        diffMixed:"混合モード",
+        scoreText:"スコア：",
+        timerLabel:"残り時間：",
+        inputTip:"入力ルール：ひらがなのみ、漢字不可。文末は必ずです/でした/かったですで終わる",
+        correctMsg:"せいかい！+10点",
+        wrongMsg:"不正解、正解：",
+        timeOver:"時間切れ！正解：",
+        noteTokui:"※とくいは活用しません",
+        startBtn:"クイズを開始",
+        skipBtn:"スキップ",
+        checkBtn:"確認",
+        continueBtn:"次へ",
+        backBtn:"ホームに戻る",
+        endSessionBtn:"セッション終了",
+        summaryTitle:"セッション集計",
+        sumAttempt:"解答総数：",
+        sumCorrect:"正解数：",
+        sumWrong:"不正解/スキップ：",
+        sumScore:"合計スコア：",
+        mistakeHeader:"今回のミス一覧",
+        tblEn:"英語意味",
+        tblQuestion:"設問",
+        tblAnswer:"正解",
+        tblUserAns:"自分の答え",
+        practiceMistakeBtn:"ミス問題を再練習"
+    },
+    en: {
+        title:"Adjective Quiz",
+        step1:"1. Select Basic Mode",
+        step2:"2. Select Practice Category",
+        step3:"3. Detail Options",
+        modeStudy:"Study Mode (no timer)",
+        modeChallenge:"Challenge Mode (20s per question)",
+        sortLesson:"By Lesson Progress",
+        sortGrammar:"By Grammar Type",
+        sortDiff:"By Difficulty",
+        stage1:"Stage1: Dictionary & Negative Present",
+        stage2:"Stage2: Past & Negative Past",
+        stage3:"Stage3: Te Conjunction",
+        stage4:"Stage4: Kedo Contrast",
+        gOriginal:"Dictionary Form",
+        gNeg:"Present Negative",
+        gPast:"Past Form",
+        gTe:"Te Conjunction",
+        gKedo:"Kedo Contrast Sentence",
+        diffEasy:"Easy Mode",
+        diffMixed:"Mixed Mode",
+        scoreText:"Score: ",
+        timerLabel:"Remaining Time: ",
+        inputTip:"Rule: Only hiragana, no kanji. Must end with です/でした/かったです",
+        correctMsg:"Correct! +10pts",
+        wrongMsg:"Wrong, answer: ",
+        timeOver:"Time's up! Answer: ",
+        noteTokui:"Note: tokui has no conjugation",
+        startBtn:"Start Quiz",
+        skipBtn:"SKIP",
+        checkBtn:"CHECK",
+        continueBtn:"CONTINUE",
+        backBtn:"BACK HOME",
+        endSessionBtn:"End Session",
+        summaryTitle:"Session Summary",
+        sumAttempt:"Attempted: ",
+        sumCorrect:"Correct: ",
+        sumWrong:"Wrong/Skip: ",
+        sumScore:"Score: ",
+        mistakeHeader:"Mistakes (this session):",
+        tblEn:"En",
+        tblQuestion:"Meaning",
+        tblAnswer:"Correct",
+        tblUserAns:"Your answer",
+        practiceMistakeBtn:"Practice Mistakes"
+    }
+};
+let currentLang = "ja";
+let mistakeRecordList = [];
+let mistakeQuestionPool = [];
+let practiceMistakeMode = false;
+let baseMode = null;
+let sortMain = null;
+let subOpt = null;
+let score = 0;
+let attemptCount = 0;
+let correctCount = 0;
+let wrongCount = 0;
+let currentQ = null;
+let timerId = null;
+let remainTime = 20;
+let fullFilterPool = [];
+let hasTokuiAppeared = false;
+let questionResultShown = false;
+
+// 新增：从原始错题列表移除指定英文题目的记录
+function removeSolvedMistake(enText) {
+    mistakeRecordList = mistakeRecordList.filter(item => item.questionText !== enText);
+}
+
+function renderLang(){
+    const dict = langData[currentLang];
+    document.querySelectorAll("[data-i18n]").forEach(el=>{
+        const key = el.getAttribute("data-i18n");
+        el.innerText = dict[key];
+    })
+    if(currentQ){
+        if(currentLang === "ja"){
+            document.getElementById("question-area").innerText = `意味：${currentQ.en}`;
+        }else{
+            document.getElementById("question-area").innerText = `Meaning: ${currentQ.en}`;
+        }
+        refreshTimerText();
+        if(questionResultShown){
+            refreshFeedbackText();
+        }
+    }
+    document.getElementById("lang-ja").classList.toggle("active", currentLang==="ja");
+    document.getElementById("lang-en").classList.toggle("active", currentLang==="en");
+}
+
+function refreshTimerText(){
+    if(baseMode === "challenge"){
+        const dict = langData[currentLang];
+        document.getElementById("timer-area").innerText = `${dict.timerLabel}${remainTime}s`;
+    }
+}
+
+function refreshFeedbackText(){
+    const feedDom = document.getElementById("feed-text");
+    const dict = langData[currentLang];
+    if(feedDom.classList.contains("correct-text")){
+        feedDom.innerText = dict.correctMsg;
+    }else{
+        if(feedDom.innerText.startsWith(dict.timeOver)){
+            feedDom.innerText = `${dict.timeOver}${currentQ.jp}`;
+        }else{
+            feedDom.innerText = `${dict.wrongMsg}${currentQ.jp}`;
+        }
+    }
+}
+
+function shuffleArray(arr) {
+    const copy = [...arr];
+    for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+}
+
+const fullBank = [
+{type:"original", base:"あたたかい", en:"warm", jp:"あたたかいです", stage:1, diff:"easy"},
+{type:"original", base:"あたらしい", en:"new", jp:"あたらしいです", stage:1, diff:"easy"},
+{type:"original", base:"あつい", en:"hot", jp:"あついです", stage:1, diff:"easy"},
+{type:"original", base:"あぶない", en:"dangerous", jp:"あぶないです", stage:1, diff:"mixed"},
+{type:"original", base:"いそがしい", en:"busy", jp:"いそがしいです", stage:1, diff:"mixed"},
+{type:"original", base:"いい", en:"good", jp:"いいです", stage:1, diff:"easy"},
+{type:"original", base:"おおい", en:"many", jp:"おおいです", stage:1, diff:"mixed"},
+{type:"original", base:"おもしろい", en:"interesting", jp:"おもしろいです", stage:1, diff:"easy"},
+{type:"original", base:"おそい", en:"late", jp:"おそいです", stage:1, diff:"mixed"},
+{type:"original", base:"かっこいい", en:"stylish", jp:"かっこいいです", stage:1, diff:"easy"},
+{type:"original", base:"かわいい", en:"cute", jp:"かわいいです", stage:1, diff:"easy"},
+{type:"original", base:"ひろい", en:"spacious", jp:"ひろいです", stage:1, diff:"mixed"},
+{type:"original", base:"せまい", en:"narrow", jp:"せまいです", stage:1, diff:"mixed"},
+{type:"original", base:"まるい", en:"round", jp:"まるいです", stage:1, diff:"mixed"},
+{type:"original", base:"めずらしい", en:"rare", jp:"めずらしいです", stage:1, diff:"mixed"},
+{type:"original", base:"むしあつい", en:"hot and humid", jp:"むしあついです", stage:1, diff:"mixed"},
+{type:"original", base:"むずかしい", en:"difficult", jp:"むずかしいです", stage:1, diff:"mixed"},
+{type:"original", base:"ながい", en:"long", jp:"ながいです", stage:1, diff:"easy"},
+{type:"original", base:"さむい", en:"cold", jp:"さむいです", stage:1, diff:"easy"},
+{type:"original", base:"すごい", en:"great", jp:"すごいです", stage:1, diff:"mixed"},
+{type:"original", base:"すずしい", en:"cool", jp:"すずしいです", stage:1, diff:"easy"},
+{type:"original", base:"たかい", en:"expensive", jp:"たかいです", stage:1, diff:"easy"},
+{type:"original", base:"たのしい", en:"fun", jp:"たのしいです", stage:1, diff:"easy"},
+{type:"original", base:"ちいさい", en:"small", jp:"ちいさいです", stage:1, diff:"easy"},
+{type:"original", base:"つよい", en:"strong", jp:"つよいです", stage:1, diff:"mixed"},
+{type:"original", base:"とおい", en:"far", jp:"とおいです", stage:1, diff:"mixed"},
+{type:"original", base:"はやい", en:"early", jp:"はやいです", stage:1, diff:"mixed"},
+{type:"original", base:"ふるい", en:"old", jp:"ふるいです", stage:1, diff:"easy"},
+{type:"original", base:"わかい", en:"young", jp:"わかいです", stage:1, diff:"mixed"},
+{type:"original", base:"やすい", en:"cheap", jp:"やすいです", stage:1, diff:"easy"},
+{type:"original", base:"しろい", en:"white", jp:"しろいです", stage:1, diff:"easy"},
+{type:"original", base:"くろい", en:"black", jp:"くろいです", stage:1, diff:"easy"},
+{type:"original", base:"あかい", en:"red", jp:"あかいです", stage:1, diff:"easy"},
+{type:"original", base:"あおい", en:"blue", jp:"あおいです", stage:1, diff:"easy"},
+{type:"original", base:"きいろい", en:"yellow", jp:"きいろいです", stage:1, diff:"easy"},
+{type:"original", base:"いろいろ", en:"various", jp:"いろいろです", stage:1, diff:"mixed"},
+{type:"original", base:"げんき", en:"energetic", jp:"げんきです", stage:1, diff:"mixed"},
+{type:"original", base:"かんたん", en:"easy", jp:"かんたんです", stage:1, diff:"mixed"},
+{type:"original", base:"きれい", en:"beautiful", jp:"きれいです", stage:1, diff:"easy"},
+{type:"original", base:"しずか", en:"quiet", jp:"しずかです", stage:1, diff:"easy"},
+{type:"original", base:"たいへん", en:"tough", jp:"たいへんです", stage:1, diff:"mixed"},
+{type:"original", base:"だいじょうぶ", en:"okay", jp:"だいじょうぶです", stage:1, diff:"mixed"},
+{type:"original", base:"とくい", en:"good at", jp:"とくいです", stage:1, diff:"mixed"},
+{type:"original", base:"にがて", en:"not good at", jp:"にがてです", stage:1, diff:"mixed", needNote:true},
+{type:"original", base:"にぎやか", en:"lively", jp:"にぎやかです", stage:1, diff:"mixed"},
+{type:"original", base:"ひま", en:"free", jp:"ひまです", stage:1, diff:"mixed"},
+{type:"original", base:"べんり", en:"convenient", jp:"べんりです", stage:1, diff:"mixed"},
+{type:"original", base:"まっすぐ", en:"straight", jp:"まっすぐです", stage:1, diff:"mixed"},
+{type:"original", base:"ゆうめい", en:"famous", jp:"ゆうめいです", stage:1, diff:"mixed"},
+{type:"original", base:"おしゃれ", en:"fashionable", jp:"おしゃれです", stage:1, diff:"mixed"},
+{type:"original", base:"すき", en:"favorite", jp:"すきです", stage:1, diff:"easy"},
+{type:"original", base:"きらい", en:"dislike", jp:"きらいです", stage:1, diff:"mixed"},
+{type:"neg", base:"あたたかい", en:"not warm", jp:"あたたかくないです", stage:1, diff:"easy"},
+{type:"neg", base:"あつい", en:"not hot", jp:"あつくないです", stage:1, diff:"easy"},
+{type:"neg", base:"かっこいい", en:"not stylish", jp:"かっこよくないです", stage:1, diff:"mixed"},
+{type:"neg", base:"かわいい", en:"not cute", jp:"かわいくないです", stage:1, diff:"easy"},
+{type:"neg", base:"ながい", en:"not long", jp:"ながくないです", stage:1, diff:"easy"},
+{type:"neg", base:"すずしい", en:"not cool", jp:"すずしくないです", stage:1, diff:"easy"},
+{type:"neg", base:"たかい", en:"not expensive", jp:"たかくないです", stage:1, diff:"easy"},
+{type:"neg", base:"ちいさい", en:"not small", jp:"ちいさくないです", stage:1, diff:"easy"},
+{type:"neg", base:"しろい", en:"not white", jp:"しろくないです", stage:1, diff:"easy"},
+{type:"neg", base:"せまい", en:"not narrow", jp:"せまくないです", stage:1, diff:"mixed"},
+{type:"neg", base:"おもしろい", en:"not interesting", jp:"おもしろくないです", stage:1, diff:"mixed"},
+{type:"neg", base:"しずか", en:"not quiet", jp:"しずかじゃないです", stage:1, diff:"easy"},
+{type:"neg", base:"きれい", en:"not beautiful", jp:"きれいじゃないです", stage:1, diff:"easy"},
+{type:"neg", base:"すき", en:"not favorite", jp:"すきじゃないです", stage:1, diff:"easy"},
+{type:"neg", base:"べんり", en:"not convenient", jp:"べんりじゃないです", stage:1, diff:"mixed"},
+{type:"neg", base:"げんき", en:"not energetic", jp:"げんきじゃないです", stage:1, diff:"mixed"},
+{type:"neg", base:"あぶない", en:"not dangerous", jp:"あぶなくないです", stage:1, diff:"mixed"},
+{type:"neg", base:"むずかしい", en:"not difficult", jp:"むずかしくないです", stage:1, diff:"mixed"},
+{type:"past", base:"やすい", en:"was cheap", jp:"やすかったです", stage:2, diff:"easy"},
+{type:"past", base:"やすい", en:"was not cheap", jp:"やすくなかったです", stage:2, diff:"easy"},
+{type:"past", base:"すずしい", en:"was cool", jp:"すずしかったです", stage:2, diff:"easy"},
+{type:"past", base:"すずしい", en:"was not cool", jp:"すずしくなかったです", stage:2, diff:"easy"},
+{type:"past", base:"かっこいい", en:"was stylish", jp:"かっこよかったです", stage:2, diff:"mixed"},
+{type:"past", base:"たのしい", en:"was fun", jp:"たのしかったです", stage:2, diff:"easy"},
+{type:"past", base:"たのしい", en:"was not fun", jp:"たのしくなかったです", stage:2, diff:"mixed"},
+{type:"past", base:"しずか", en:"was quiet", jp:"しずかでした", stage:2, diff:"easy"},
+{type:"past", base:"しずか", en:"was not quiet", jp:"しずかじゃなかったです", stage:2, diff:"easy"},
+{type:"past", base:"きれい", en:"was beautiful", jp:"きれいでした", stage:2, diff:"easy"},
+{type:"past", base:"きれい", en:"was not beautiful", jp:"きれいじゃなかったです", stage:2, diff:"mixed"},
+{type:"past", base:"おしゃれ", en:"fashionable", jp:"おしゃれでした", stage:2, diff:"mixed"},
+{type:"past", base:"ひろい", en:"spacious", jp:"ひろかったです", stage:2, diff:"mixed"},
+{type:"past", base:"せまい", en:"narrow", jp:"せまかったです", stage:2, diff:"mixed"},
+{type:"past", base:"あつい", en:"hot", jp:"あつかったです", stage:2, diff:"easy"},
+{type:"past", base:"あつい", en:"not hot", jp:"あつくなかったです", stage:2, diff:"easy"},
+{type:"past", base:"げんき", en:"energetic", jp:"げんきでした", stage:2, diff:"mixed"},
+{type:"past", base:"げんき", en:"not energetic", jp:"げんきじゃなかったです", stage:2, diff:"mixed"},
+{type:"past", base:"ちいさい", en:"small", jp:"ちいさかったです", stage:2, diff:"easy"},
+{type:"te", base:"かわいい+しろい", en:"cute and white", jp:"かわいくてしろいです", stage:3, diff:"easy"},
+{type:"te", base:"かっこいい+くろい", en:"stylish and black", jp:"かっこよくてくろいです", stage:3, diff:"easy"},
+{type:"te", base:"あかい+まるい", en:"red and round", jp:"あかくてまるいです", stage:3, diff:"easy"},
+{type:"te", base:"きいろい+ひろい", en:"yellow and spacious", jp:"きいろくてひろいです", stage:3, diff:"mixed"},
+{type:"te", base:"すずしい+たのしい", en:"cool and fun", jp:"すずしくてたのしいです", stage:3, diff:"mixed"},
+{type:"te", base:"あたたかい+おもしろい", en:"warm and interesting", jp:"あたたかくておもしろいです", stage:3, diff:"mixed"},
+{type:"te", base:"ひろい+ながい", en:"spacious and long", jp:"ひろくてながいです", stage:3, diff:"easy"},
+{type:"te", base:"まるい+ちいさい", en:"round and small", jp:"まるくてちいさいです", stage:3, diff:"easy"},
+{type:"te", base:"わかい+つよい", en:"young and strong", jp:"わかくてつよいです", stage:3, diff:"mixed"},
+{type:"te", base:"めずらしい+すごい", en:"rare and great", jp:"めずらしくてすごいです", stage:3, diff:"mixed"},
+{type:"te", base:"ちいさい+まるい", en:"small and round", jp:"ちいさくてまるいです", stage:3, diff:"easy"},
+{type:"te", base:"きれい+おしゃれ", en:"beautiful and fashionable", jp:"きれいでおしゃれです", stage:3, diff:"mixed"},
+{type:"te", base:"ゆうめい+いろいろ", en:"famous and various", jp:"ゆうめいでいろいろです", stage:3, diff:"mixed"},
+{type:"te", base:"げんき+べんり", en:"energetic and convenient", jp:"げんきでべんりです", stage:3, diff:"mixed"},
+{type:"te", base:"まっすぐ+しずか", en:"straight and quiet", jp:"まっすぐでしずかです", stage:3, diff:"mixed"},
+{type:"te", base:"だいじょうぶ+かんたん", en:"okay and easy", jp:"だいじょうぶでかんたんです", stage:3, diff:"mixed"},
+{type:"te", base:"きれい+ゆうめい", en:"beautiful and famous", jp:"きれいでゆうめいです", stage:3, diff:"mixed"},
+{type:"te", base:"おしゃれ+いろいろ", en:"fashionable and various", jp:"おしゃれでいろいろです", stage:3, diff:"mixed"},
+{type:"te", base:"かわいい+きれい", en:"cute and beautiful", jp:"かわいくてきれいです", stage:3, diff:"easy"},
+{type:"te", base:"すごい+ゆうめい", en:"great and famous", jp:"すごくてゆうめいです", stage:3, diff:"mixed"},
+{type:"te", base:"たのしい+にぎやか", en:"fun and lively", jp:"たのしくてにぎやかです", stage:3, diff:"mixed"},
+{type:"te", base:"あたらしい+べんり", en:"new and convenient", jp:"あたらしくてべんりです", stage:3, diff:"mixed"},
+{type:"te", base:"ちいさくておしゃれ", en:"small and fashionable", jp:"ちいさくておしゃれです", stage:3, diff:"easy"},
+{type:"te", base:"つよい+げんき", en:"strong and energetic", jp:"つよくてげんきです", stage:3, diff:"mixed"},
+{type:"te", base:"ひろい+しずか", en:"spacious and quiet", jp:"ひろくてしずかです", stage:3, diff:"mixed"},
+{type:"te", base:"わかい+げんき", en:"young and energetic", jp:"わかくてげんきです", stage:3, diff:"mixed"},
+{type:"te", base:"あたたかい+にぎやか", en:"warm and lively", jp:"あたたかくてにぎやかです", stage:3, diff:"mixed"},
+{type:"te", base:"めずらしい+ゆうめい", en:"rare and famous", jp:"めずらしくてゆうめいです", stage:3, diff:"mixed"},
+{type:"kedo", base:"たかい+べんり", en:"expensive but convenient", jp:"たかいけどべんりなです", stage:4, diff:"mixed"},
+{type:"kedo", base:"ふるい+きれい", en:"old but beautiful", jp:"ふるいけどきれいなです", stage:4, diff:"easy"},
+{type:"kedo", base:"つよい+むずかしい", en:"strong but difficult", jp:"つよいけどむずかしいです", stage:4, diff:"mixed"},
+{type:"kedo", base:"めずらしい+ちいさい", en:"rare but small", jp:"めずらしいけどちいさいです", stage:4, diff:"mixed"},
+{type:"kedo", base:"ながい+まるい", en:"long but round", jp:"ながいけどまるいです", stage:4, diff:"easy"},
+{type:"kedo", base:"わかい+いそがしい", en:"young but busy", jp:"わかいけどいそがしいです", stage:4, diff:"mixed"},
+{type:"kedo", base:"かっこいい+ちいさい", en:"stylish but small", jp:"かっこいいけどちいさいです", stage:4, diff:"easy"},
+{type:"kedo", base:"かわいい+あぶない", en:"cute but dangerous", jp:"かわいいけどあぶないです", stage:4, diff:"mixed"},
+{type:"kedo", base:"たのしい+むしあつい", en:"fun but humid", jp:"たのしいけどむしあついです", stage:4, diff:"mixed"},
+{type:"kedo", base:"あつい+しずか", en:"hot but quiet", jp:"あついけどしずかなです", stage:4, diff:"mixed"},
+{type:"kedo", base:"わかい+しずか", en:"young but quiet", jp:"わかいけどしずかなです", stage:4, diff:"mixed"},
+{type:"kedo", base:"ちいさい+ゆうめい", en:"small but famous", jp:"ちいさいけどゆうめいなです", stage:4, diff:"mixed"},
+];
+
+function getFilteredFullPool() {
+    if(practiceMistakeMode){
+        return shuffleArray([...mistakeQuestionPool]);
+    }
+    let list = [...fullBank];
+    if(sortMain === "lesson") {
+        const sNum = parseInt(subOpt.replace("stage",""));
+        list = list.filter(item => item.stage === sNum);
+    } else if(sortMain === "grammar") {
+        list = list.filter(item => item.type === subOpt);
+    } else if(sortMain === "diff") {
+        if(subOpt === "easy") list = list.filter(item => item.diff === "easy");
+    }
+    if(!hasTokuiAppeared){
+        let tokuiItems = list.filter(x=>x.base==="とくい");
+        let otherItems = list.filter(x=>x.base!=="にがて");
+        list = [...tokuiItems, ...shuffleArray(otherItems)];
+    }
+    return shuffleArray(list);
+}
+
+function pickNextQuestion() {
+    if(fullFilterPool.length <= 0) {
+        fullFilterPool = getFilteredFullPool();
+    }
+    const q = fullFilterPool.shift();
+    if(q.base === "とくい") hasTokuiAppeared = true;
+    return q;
+}
+
+function loadNewQuestion() {
+    clearInterval(timerId);
+    currentQ = pickNextQuestion();
+    questionResultShown = false;
+    const dict = langData[currentLang];
+    if(currentLang === "ja"){
+        document.getElementById("question-area").innerText = `意味：${currentQ.en}`;
+    }else{
+        document.getElementById("question-area").innerText = `Meaning: ${currentQ.en}`;
+    }
+    document.getElementById("ans-input").value = "";
+    document.getElementById("feed-text").innerText = "";
+    document.getElementById("feed-text").className = "feedback";
+    document.getElementById("note-area").innerText = "";
+    document.getElementById("doubleBtns").style.display="flex";
+    document.getElementById("continue-btn").style.display="none";
+    const timerDom = document.getElementById("timer-area");
+    if(baseMode === "challenge") {
+        remainTime = 20;
+        startTimer();
+    }else{
+        timerDom.innerText = "";
+    }
+}
+
+function startTimer() {
+    clearInterval(timerId);
+    refreshTimerText();
+    timerId = setInterval(()=>{
+        remainTime--;
+        refreshTimerText();
+        if(remainTime <= 0) {
+            clearInterval(timerId);
+            showAnswer(true);
+        }
+    },1000);
+}
+
+function showAnswer(isTimeout=false){
+    const feedDom = document.getElementById("feed-text");
+    const dict = langData[currentLang];
+    feedDom.className = "feedback";
+    if(isTimeout){
+        feedDom.innerText = `${dict.timeOver}${currentQ.jp}`;
+    }else{
+        feedDom.innerText = `${dict.wrongMsg}${currentQ.jp}`;
+    }
+    questionResultShown = true;
+    if(!practiceMistakeMode){
+        const alreadyExist = mistakeRecordList.some(r=>r.questionText === currentQ.en);
+        if(!alreadyExist){
+            wrongCount++;
+            attemptCount++;
+            mistakeRecordList.push({
+                en: currentQ.en,
+                questionText: currentQ.en,
+                correctAns: currentQ.jp,
+                userAns: document.getElementById("ans-input").value.trim()
+            });
+        }
+    }
+    if(currentQ.needNote){
+        document.getElementById("note-area").innerText = dict.noteTokui;
+    }
+    document.getElementById("doubleBtns").style.display="none";
+    document.getElementById("continue-btn").style.display="block";
+}
+
+document.getElementById("check-btn").onclick = function(){
+    const userInput = document.getElementById("ans-input").value.trim();
+    if(userInput === "") return;
+    clearInterval(timerId);
+    const feedDom = document.getElementById("feed-text");
+    const noteDom = document.getElementById("note-area");
+    const dict = langData[currentLang];
+    noteDom.innerText = "";
+    if(!practiceMistakeMode) attemptCount++;
+    if(userInput === currentQ.jp) {
+        score += 10;
+        document.getElementById("score-num").innerText = score;
+        feedDom.innerText = dict.correctMsg;
+        feedDom.className = "feedback correct-text";
+        questionResultShown = true;
+        // 错题练习答对：1.从练习池移除 2.从原始错题记录移除（汇总不再显示）
+        if(practiceMistakeMode){
+            mistakeQuestionPool = mistakeQuestionPool.filter(item=>item.en !== currentQ.en);
+            removeSolvedMistake(currentQ.en);
+        }
+    }else{
+        if(!practiceMistakeMode){
+            const alreadyExist = mistakeRecordList.some(r=>r.questionText === currentQ.en);
+            if(!alreadyExist){
+                mistakeRecordList.push({
+                    en: currentQ.en,
+                    questionText: currentQ.en,
+                    correctAns: currentQ.jp,
+                    userAns: userInput
+                });
+            }
+        }
+        showAnswer(false);
+        return;
+    }
+    document.getElementById("doubleBtns").style.display="none";
+    document.getElementById("continue-btn").style.display="block";
+}
+
+document.getElementById("skip-btn").onclick = function(){
+    clearInterval(timerId);
+    const userInput = document.getElementById("ans-input").value.trim();
+    if(!practiceMistakeMode){
+        const alreadyExist = mistakeRecordList.some(r=>r.questionText === currentQ.en);
+        if(!alreadyExist){
+            mistakeRecordList.push({
+                en: currentQ.en,
+                questionText: currentQ.en,
+                correctAns: currentQ.jp,
+                userAns: userInput || "(SKIP)"
+            });
+        }
+    }
+    showAnswer(false);
+}
+
+document.getElementById("continue-btn").onclick = function(){
+    loadNewQuestion();
+}
+
+function backToHome(){
+    clearInterval(timerId);
+    document.getElementById("home").style.display = "block";
+    document.getElementById("quiz-page").style.display = "none";
+    document.getElementById("summary-page").style.display = "none";
+    document.querySelectorAll(".mode-btn").forEach(b=>b.classList.remove("active"));
+    document.querySelectorAll(".opt-panel").forEach(p=>p.style.display="none");
+    baseMode = null; sortMain = null; subOpt = null;
+    fullFilterPool = [];
+    score = 0; attemptCount=0; correctCount=0; wrongCount=0;
+    hasTokuiAppeared = false;
+    mistakeRecordList = [];
+    mistakeQuestionPool = [];
+    practiceMistakeMode = false;
+    questionResultShown = false;
+}
+
+function showSummary(){
+    clearInterval(timerId);
+    document.getElementById("quiz-page").style.display="none";
+    document.getElementById("summary-page").style.display="block";
+    document.getElementById("sumAttemptNum").innerText = attemptCount;
+    document.getElementById("sumCorrectNum").innerText = correctCount;
+    document.getElementById("sumWrongNum").innerText = wrongCount;
+    document.getElementById("sumScoreNum").innerText = score;
+    const tbody = document.getElementById("mistakeTableBody");
+    tbody.innerHTML = "";
+    mistakeRecordList.forEach((item,idx)=>{
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${idx+1}</td>
+            <td>${item.en}</td>
+            <td>${item.questionText}</td>
+            <td>${item.correctAns}</td>
+            <td>${item.userAns}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+document.getElementById("practiceMistakeBtn").onclick = function(){
+    if(mistakeRecordList.length === 0){
+        alert(currentLang==="ja"?"ミスした問題はありません":"No mistakes in this session");
+        return;
+    }
+    practiceMistakeMode = true;
+    document.getElementById("summary-page").style.display="none";
+    document.getElementById("quiz-page").style.display="block";
+    // 转换原始错题记录为标准题目对象
+    mistakeQuestionPool = mistakeRecordList.map(item=>{
+        return {
+            en: item.en,
+            jp: item.correctAns
+        };
+    })
+    fullFilterPool = shuffleArray([...mistakeQuestionPool]);
+    loadNewQuestion();
+}
+
+document.addEventListener("DOMContentLoaded", function(){
+    document.getElementById("lang-ja").onclick = ()=>{currentLang="ja";renderLang();};
+    document.getElementById("lang-en").onclick = ()=>{currentLang="en";renderLang();};
+
+    document.querySelectorAll(".base-mode").forEach(btn=>{
+        btn.onclick = ()=>{
+            document.querySelectorAll(".base-mode").forEach(b=>b.classList.remove("active"));
+            btn.classList.add("active");
+            baseMode = btn.dataset.val;
+        }
+    })
+    document.querySelectorAll(".sort-type").forEach(btn=>{
+        btn.onclick = ()=>{
+            document.querySelectorAll(".sort-type").forEach(b=>b.classList.remove("active"));
+            btn.classList.add("active");
+            sortMain = btn.dataset.val;
+            document.querySelectorAll(".opt-panel").forEach(p=>p.style.display="none");
+            if(sortMain === "lesson"){
+                document.querySelector(".opt-lesson").style.display="flex";
+            }else if(sortMain === "grammar"){
+                document.querySelector(".opt-grammar").style.display="flex";
+            }else if(sortMain === "diff"){
+                document.querySelector(".opt-diff").style.display="flex";
+            }
+            subOpt = null;
+            document.querySelectorAll(".opt-item").forEach(o=>o.classList.remove("active"));
+        }
+    })
+    document.querySelectorAll(".opt-item").forEach(btn=>{
+        btn.onclick = ()=>{
+            const parent = btn.parentElement;
+            parent.querySelectorAll(".opt-item").forEach(b=>b.classList.remove("active"));
+            btn.classList.add("active");
+            subOpt = btn.dataset.val;
+        }
+    })
+
+    document.getElementById("start-quiz").onclick = function(){
+        if(!baseMode || !sortMain || !subOpt){
+            const dict = langData[currentLang];
+            alert(currentLang==="ja"?"モード・区分・オプションをすべて選択してください":"Please select mode, category and detail options first");
+            return;
+        }
+        document.getElementById("home").style.display = "none";
+        document.getElementById("quiz-page").style.display = "block";
+        document.getElementById("summary-page").style.display = "none";
+        score = 0; attemptCount=0; correctCount=0; wrongCount=0;
+        mistakeRecordList = [];
+        mistakeQuestionPool = [];
+        practiceMistakeMode = false;
+        fullFilterPool = [];
+        hasTokuiAppeared = false;
+        questionResultShown = false;
+        document.getElementById("score-num").innerText = score;
+        loadNewQuestion();
+    }
+
+    document.getElementById("ans-input").addEventListener("keydown", e=>{
+        if(e.key === "Enter") e.preventDefault();
+    })
+
+    renderLang();
+})
+</script>
+</body>
+</html>
