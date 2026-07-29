@@ -678,6 +678,7 @@ function loadNewQuestion() {
         document.getElementById("question-area").innerText = `Meaning: ${currentQ.en}`;
     }
     document.getElementById("ans-input").value = "";
+    document.getElementById("ans-input").readOnly = false; // <--- 【新增】恢复可输入状态
     document.getElementById("feed-text").innerText = "";
     document.getElementById("feed-text").className = "feedback";
     document.getElementById("note-area").innerText = "";
@@ -690,6 +691,9 @@ function loadNewQuestion() {
     }else{
         timerDom.innerText = "";
     }
+
+    // 【新增这一句】加载新题目后自动聚焦输入框
+    document.getElementById("ans-input").focus();
 }
 
 function startTimer() {
@@ -708,6 +712,9 @@ function startTimer() {
 function showAnswer(isTimeout=false){
     const feedDom = document.getElementById("feed-text");
     const dict = langData[currentLang];
+
+    document.getElementById("ans-input").readOnly = true; // <--- 【新增】答错/跳过/超时，锁定输入
+    
     feedDom.className = "feedback";
     if(isTimeout){
         feedDom.innerText = `${dict.timeOver}${currentQ.jp}`;
@@ -747,6 +754,7 @@ document.getElementById("check-btn").onclick = function(){
     if(userInput === currentQ.jp) {
         score += 10;
         document.getElementById("score-num").innerText = score;
+        document.getElementById("ans-input").readOnly = true; // <--- 【新增】回答正确，锁定输入
         feedDom.innerText = dict.correctMsg;
         feedDom.className = "feedback correct-text";
         questionResultShown = true;
@@ -911,9 +919,43 @@ document.addEventListener("DOMContentLoaded", function(){
         loadNewQuestion();
     }
 
-    document.getElementById("ans-input").addEventListener("keydown", e=>{
-        if(e.key === "Enter") e.preventDefault();
-    })
+    const ansInput = document.getElementById("ans-input");
+    let isComposing = false;
+
+    // 1. 记录输入法状态
+    ansInput.addEventListener("compositionstart", () => {
+        isComposing = true;
+    });
+
+    // 2. 延迟清除状态，针对 Safari 的保底
+    ansInput.addEventListener("compositionend", () => {
+        setTimeout(() => {
+            isComposing = false;
+        }, 0);
+    });
+
+    // 3. 监听键盘回车
+    ansInput.addEventListener("keydown", e => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+
+            // 核心拦截：拦截选词时的回车
+            if (e.isComposing || isComposing || e.keyCode === 229) {
+                return;
+            }
+
+            const continueBtn = document.getElementById("continue-btn");
+            const checkBtn = document.getElementById("check-btn");
+
+            // 阶段判定：如果“次へ/Continue”按钮正在显示，说明已经判定过了，此时回车代表 Next
+            if (continueBtn.style.display === "block") {
+                continueBtn.click();
+            } else {
+                // 否则，说明还在答题阶段，此时回车代表 Check
+                checkBtn.click();
+            }
+        }
+    });
 
     renderLang();
 })
