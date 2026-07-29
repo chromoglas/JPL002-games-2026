@@ -5,11 +5,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Adjective Quiz 形容詞クイズ</title>
     <style>
+        :root {
+            --color-primary: #3b82f6;
+            --color-primary-light: rgba(59, 130, 246, 0.15);
+            --color-success: #22c55e;
+            --color-danger: #dc2626;
+            --color-neutral: #64748b;
+            --color-border: #e2e8f0;
+            --radius-sm: 6px;
+            --radius-md: 8px;
+            --radius-lg: 10px;
+        }
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
             font-family: "Noto Sans JP", sans-serif;
+        }
+        button {
+            transition: background 0.15s, box-shadow 0.15s, transform 0.1s, border-color 0.15s, opacity 0.15s, color 0.15s;
+            cursor: pointer;
+        }
+        button:hover:not(:disabled) {
+            filter: brightness(0.96);
+        }
+        button:active:not(:disabled) {
+            transform: scale(0.98);
+        }
+        button:focus-visible {
+            outline: 2px solid var(--color-primary);
+            outline-offset: 2px;
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
         body {
             background-color: #f7f8fc;
@@ -20,22 +49,55 @@
             margin: 0 auto;
         }
         .lang-switch-box {
-            text-align: right;
-            margin-bottom:20px;
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 20px;
+        }
+        .lang-switch {
+            position: relative;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            background: #e2e8f0;
+            border-radius: 999px;
+            padding: 4px;
+            border: 1px solid var(--color-border);
+        }
+        .lang-slider {
+            position: absolute;
+            top: 4px;
+            bottom: 4px;
+            left: 4px;
+            width: calc(50% - 4px);
+            background: var(--color-primary);
+            border-radius: 999px;
+            box-shadow: 0 1px 4px rgba(59, 130, 246, 0.35);
+            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+        }
+        .lang-switch.en .lang-slider {
+            transform: translateX(100%);
         }
         .lang-btn {
-            padding:8px 16px;
-            font-size:16px;
-            border-radius:6px;
-            border:1px solid #3b82f6;
-            background:#fff;
-            color:#3b82f6;
-            cursor:pointer;
-            margin-left:8px;
+            position: relative;
+            z-index: 1;
+            padding: 6px 20px;
+            min-width: 52px;
+            font-size: 15px;
+            font-weight: 600;
+            border: none;
+            background: transparent;
+            color: #64748b;
+            border-radius: 999px;
+        }
+        .lang-btn:hover:not(.active) {
+            color: #334155;
+            filter: none;
         }
         .lang-btn.active {
-            background:#3b82f6;
-            color:#fff;
+            color: #fff;
+        }
+        .lang-btn:active:not(:disabled) {
+            transform: none;
         }
         .home-screen {
             display: block;
@@ -66,30 +128,45 @@
         .mode-btn {
             padding: 14px 24px;
             font-size: 18px;
-            border: none;
-            border-radius: 8px;
-            background: #e2e8f0;
-            cursor: pointer;
+            font-weight: 500;
+            min-height: 52px;
+            border: 2px solid var(--color-border);
+            border-radius: var(--radius-md);
+            background: #fff;
+            color: #334155;
+        }
+        .mode-btn:hover:not(.active):not(:disabled) {
+            border-color: #cbd5e1;
+            background: #f8fafc;
+            filter: none;
         }
         .mode-btn.active {
-            background: #3b82f6;
-            color: white;
+            background: var(--color-primary);
+            color: #fff;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px var(--color-primary-light);
+            filter: none;
         }
         .start-btn {
             width: 100%;
             padding: 18px;
             font-size: 22px;
+            font-weight: 600;
             margin-top: 40px;
             border: none;
-            border-radius: 10px;
-            background: #10b981;
-            color: white;
-            cursor: pointer;
+            border-radius: var(--radius-lg);
+            background: var(--color-success);
+            color: #fff;
+            box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+        }
+        .start-btn:not(:disabled):hover {
+            filter: brightness(1.03);
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
         }
         .card {
             background: white;
             padding: 36px 30px;
-            border-radius: 12;
+            border-radius: 12px;
             box-shadow: 0 2px 14px #e0e5ef;
         }
         .score-row {
@@ -129,34 +206,50 @@
             gap: 16px;
         }
         #skip-btn {
-            width: 140px;
+            flex: 0 0 auto;
+            min-width: 140px;
             padding: 16px;
             font-size: 20px;
-            border: 1px solid #999;
-            border-radius: 8px;
+            border: 2px solid #cbd5e1;
+            border-radius: var(--radius-md);
             background: #fff;
-            cursor: pointer;
+            color: #475569;
+        }
+        #skip-btn:hover:not(:disabled) {
+            border-color: #94a3b8;
+            background: #f8fafc;
+            filter: none;
         }
         #check-btn {
             flex: 1;
             padding: 16px;
             font-size: 20px;
+            font-weight: 600;
             border: none;
-            border-radius: 8px;
-            background: #22c55e;
-            color: white;
-            cursor: pointer;
+            border-radius: var(--radius-md);
+            background: var(--color-success);
+            color: #fff;
+            box-shadow: 0 2px 6px rgba(34, 197, 94, 0.25);
+        }
+        #check-btn:hover:not(:disabled) {
+            filter: brightness(1.03);
+            box-shadow: 0 3px 10px rgba(34, 197, 94, 0.35);
         }
         #continue-btn {
             width: 100%;
             padding: 16px;
             font-size: 20px;
+            font-weight: 600;
             border: none;
-            border-radius: 8px;
-            background: #64748b;
-            color: white;
-            cursor: pointer;
-            display:none;
+            border-radius: var(--radius-md);
+            background: var(--color-success);
+            color: #fff;
+            box-shadow: 0 2px 6px rgba(34, 197, 94, 0.25);
+            display: none;
+        }
+        #continue-btn:hover:not(:disabled) {
+            filter: brightness(1.03);
+            box-shadow: 0 3px 10px rgba(34, 197, 94, 0.35);
         }
         .feedback {
             margin-top: 28px;
@@ -178,23 +271,31 @@
             margin-top:30px;
         }
         .back-home {
-            flex:1;
+            flex: 1;
             padding: 12px;
             font-size: 18px;
-            border: 1px solid #999;
-            border-radius: 8px;
-            background: white;
-            cursor: pointer;
+            border: 2px solid #cbd5e1;
+            border-radius: var(--radius-md);
+            background: #fff;
+            color: #475569;
+        }
+        .back-home:hover:not(:disabled) {
+            border-color: #94a3b8;
+            background: #f8fafc;
+            filter: none;
         }
         .end-session-btn {
-            flex:1;
-            padding:12px;
-            font-size:18px;
-            border:none;
-            border-radius:8px;
-            background:#dc2626;
-            color:#fff;
-            cursor:pointer;
+            flex: 1;
+            padding: 12px;
+            font-size: 18px;
+            border: 2px solid var(--color-danger);
+            border-radius: var(--radius-md);
+            background: #fff;
+            color: var(--color-danger);
+        }
+        .end-session-btn:hover:not(:disabled) {
+            background: #fef2f2;
+            filter: none;
         }
         .summary-title{
             font-size:28px;
@@ -223,23 +324,31 @@
             gap:16px;
             margin-top:20px;
         }
-        .practice-mistake-btn{
-            flex:1;
-            padding:12px;
-            font-size:18px;
-            border:none;
-            border-radius:8px;
-            background:#64748b;
-            color:#fff;
-            cursor:pointer;
+        .practice-mistake-btn {
+            flex: 1;
+            padding: 12px;
+            font-size: 18px;
+            font-weight: 500;
+            border: 2px solid var(--color-border);
+            border-radius: var(--radius-md);
+            background: #fff;
+            color: #334155;
+        }
+        .practice-mistake-btn:hover:not(:disabled) {
+            border-color: #cbd5e1;
+            background: #f8fafc;
+            filter: none;
         }
     </style>
 </head>
 <body>
 <div class="wrap">
     <div class="lang-switch-box">
-        <button class="lang-btn" id="lang-ja">日本語</button>
-        <button class="lang-btn" id="lang-en">English</button>
+        <div class="lang-switch" id="lang-switch" role="group" aria-label="Language">
+            <div class="lang-slider" aria-hidden="true"></div>
+            <button class="lang-btn active" id="lang-ja" type="button">日</button>
+            <button class="lang-btn" id="lang-en" type="button">EN</button>
+        </div>
     </div>
 
     <div class="home-screen" id="home">
@@ -276,7 +385,7 @@
             <button class="mode-btn opt-item" data-val="mixed" data-i18n="diffMixed"></button>
         </div>
 
-        <button class="start-btn" id="start-quiz" data-i18n="startBtn"></button>
+        <button class="start-btn" id="start-quiz" data-i18n="startBtn" disabled></button>
     </div>
 
     <div class="quiz-screen" id="quiz-page">
@@ -413,10 +522,10 @@ const langData = {
         timeOver:"Time's up! Answer: ",
         noteTokui:"Note: tokui has no conjugation",
         startBtn:"Start",
-        skipBtn:"SKIP",
-        checkBtn:"CHECK",
-        continueBtn:"CONTINUE",
-        backBtn:"BACK HOME",
+        skipBtn:"Skip",
+        checkBtn:"Check",
+        continueBtn:"Continue",
+        backBtn:"Back Home",
         endSessionBtn:"End Session",
         summaryTitle:"Session Summary",
         sumAttempt:"Attempted: ",
@@ -471,6 +580,7 @@ function renderLang(){
             refreshFeedbackText();
         }
     }
+    document.getElementById("lang-switch").classList.toggle("en", currentLang === "en");
     document.getElementById("lang-ja").classList.toggle("active", currentLang==="ja");
     document.getElementById("lang-en").classList.toggle("active", currentLang==="en");
 }
@@ -803,6 +913,11 @@ document.getElementById("continue-btn").onclick = function(){
     loadNewQuestion();
 }
 
+function updateStartBtnState() {
+    const ready = baseMode && sortMain && subOpt;
+    document.getElementById("start-quiz").disabled = !ready;
+}
+
 function backToHome(){
     clearInterval(timerId);
     document.getElementById("home").style.display = "block";
@@ -811,6 +926,7 @@ function backToHome(){
     document.querySelectorAll(".mode-btn").forEach(b=>b.classList.remove("active"));
     document.querySelectorAll(".opt-panel").forEach(p=>p.style.display="none");
     baseMode = null; sortMain = null; subOpt = null;
+    updateStartBtnState();
     fullFilterPool = [];
     score = 0; attemptCount=0; correctCount=0; wrongCount=0;
     hasTokuiAppeared = false;
@@ -871,6 +987,7 @@ document.addEventListener("DOMContentLoaded", function(){
             document.querySelectorAll(".base-mode").forEach(b=>b.classList.remove("active"));
             btn.classList.add("active");
             baseMode = btn.dataset.val;
+            updateStartBtnState();
         }
     })
     document.querySelectorAll(".sort-type").forEach(btn=>{
@@ -888,6 +1005,7 @@ document.addEventListener("DOMContentLoaded", function(){
             }
             subOpt = null;
             document.querySelectorAll(".opt-item").forEach(o=>o.classList.remove("active"));
+            updateStartBtnState();
         }
     })
     document.querySelectorAll(".opt-item").forEach(btn=>{
@@ -896,6 +1014,7 @@ document.addEventListener("DOMContentLoaded", function(){
             parent.querySelectorAll(".opt-item").forEach(b=>b.classList.remove("active"));
             btn.classList.add("active");
             subOpt = btn.dataset.val;
+            updateStartBtnState();
         }
     })
 
@@ -957,6 +1076,7 @@ document.addEventListener("DOMContentLoaded", function(){
         }
     });
 
+    updateStartBtnState();
     renderLang();
 })
 </script>
