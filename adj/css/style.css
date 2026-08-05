@@ -52,10 +52,8 @@ body { background-color: #f7f8fc; padding: 40px 20px; min-height: 100dvh; displa
     flex-direction: column;
     transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1), transform 0.35s cubic-bezier(0.4, 0, 0.2, 1); 
 }
-.screen.slide-left { transform: translateX(-30px); }
-.screen.slide-left.active { transform: translateX(0); }
-.screen.slide-right { transform: translateX(30px); }
-.screen.slide-right.active { transform: translateX(0); }
+.screen.slide-up { transform: translateY(30px); }
+.screen.slide-up.active { transform: translateY(0); }
 
 .screen.active { 
     opacity: 1; 
@@ -69,7 +67,7 @@ body { background-color: #f7f8fc; padding: 40px 20px; min-height: 100dvh; displa
     opacity: 0; 
     pointer-events: none; 
     position: absolute; 
-    transform: translateX(0); 
+    transform: translateY(0); 
 }
 
 .screen-body { 
