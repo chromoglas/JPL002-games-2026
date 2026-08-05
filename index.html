@@ -2,33 +2,85 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>正在跳转...</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>选择游戏版本</title>
+    <style>
+        /* 简单的页面和按钮美化 */
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f3f4f6;
+        }
+        .container {
+            background: white;
+            padding: 40px 50px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+        h1 {
+            margin-top: 0;
+            color: #1f2937;
+            font-size: 24px;
+            margin-bottom: 30px;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 14px 24px;
+            margin-bottom: 16px;
+            font-size: 16px;
+            font-weight: 500;
+            color: white;
+            background-color: #3b82f6; /* 主按钮颜色：蓝色 */
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .btn:hover {
+            background-color: #2563eb;
+        }
+        .btn-old {
+            background-color: #6b7280; /* 旧版按钮颜色：灰色 */
+            margin-bottom: 0;
+        }
+        .btn-old:hover {
+            background-color: #4b5563;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>请选择版本</h1>
+        <!-- 两个按钮分别调用同一个 JS 函数，传入对应的目标路径 -->
+        <button class="btn" onclick="navigateTo('adj/adj-v4.html')">进入新版 (v4)</button>
+        <button class="btn btn-old" onclick="navigateTo('archived/adj-v3/JPL002-game-adj-v3.html')">回到旧版 (v3)</button>
+    </div>
+
     <script>
-        (function() {
+        // 动态路径跳转函数：完美适配 GitHub Pages 的斜杠机制
+        function navigateTo(targetPath) {
             var path = window.location.pathname;
             
-            // 如果路径末尾带文件名（如 /index.html），去除文件名保留前面路径
+            // 如果路径末尾带文件名（如 /index.html），去除文件名
             if (path.substring(path.lastIndexOf('/') + 1).includes('.html')) {
                 path = path.substring(0, path.lastIndexOf('/') + 1);
             }
-            // 如果末尾缺少斜杠（如 /JPL002-games-2026），自动补上斜杠
+            // 如果末尾缺少斜杠（如网址没敲最后那个/），自动补全
             if (!path.endsWith('/')) {
                 path += '/';
             }
             
-            // 拼出正确路径并跳转
-            window.location.replace(path + 'adj/adj-v4.html');
-        })();
+            // 拼出完整的相对路径并跳转
+            window.location.href = path + targetPath;
+        }
     </script>
-</head>
-<body>
-    <p>正在跳转... 如果页面未响应，请<a id="fallback" href="#">点击这里</a>。</p>
-    <script>
-        // 手动点击链接的动态兜底
-        var p = window.location.pathname;
-        if (p.substring(p.lastIndexOf('/') + 1).includes('.html')) p = p.substring(0, p.lastIndexOf('/') + 1);
-        if (!p.endsWith('/')) p += '/';
-        document.getElementById('fallback').href = p + 'adj/adj-v4.html';
-    </script>
+
 </body>
 </html>
