@@ -11,8 +11,8 @@
     <div class="lang-switch-box">
         <div class="lang-switch" id="lang-switch" role="group" aria-label="Language">
             <div class="lang-slider" aria-hidden="true"></div>
-            <button class="lang-btn active" id="lang-ja" type="button">日</button>
-            <button class="lang-btn" id="lang-en" type="button">EN</button>
+            <button class="lang-btn active" id="lang-en" type="button">EN</button>
+            <button class="lang-btn" id="lang-ja" type="button">日</button>
         </div>
     </div>
 
@@ -23,44 +23,18 @@
         <div class="screen-body">
             <h1 data-i18n="title"></h1>
             <div class="section-title" data-i18n="step1"></div>
-            <div class="btn-group" id="base-mode-group">
-                <button class="mode-btn base-mode" data-val="study" data-i18n="modeStudy"></button>
-                <button class="mode-btn base-mode" data-val="challenge" data-i18n="modeChallenge"></button>
+            <div class="btn-group">
+                <button class="mode-btn opt-item" data-val="all" data-i18n="stageAll"></button>
+                <button class="mode-btn opt-item" data-val="stage1" data-i18n="stage1"></button>
+                <button class="mode-btn opt-item" data-val="stage2" data-i18n="stage2"></button>
+                <button class="mode-btn opt-item" data-val="stage3" data-i18n="stage3"></button>
+                <button class="mode-btn opt-item" data-val="stage4" data-i18n="stage4"></button>
             </div>
-            <div class="step-section" id="step2-section">
+            <div class="step-section" id="step1-section">
                 <div class="section-title" data-i18n="step2"></div>
-                <div class="btn-group" id="sort-group">
-                    <button class="mode-btn sort-type" data-val="lesson" data-i18n="sortLesson"></button>
-                    <button class="mode-btn sort-type" data-val="grammar" data-i18n="sortGrammar"></button>
-                    <button class="mode-btn sort-type" data-val="diff" data-i18n="sortDiff"></button>
-                </div>
-            </div>
-            <div class="step-section" id="step3-section">
-                <div class="section-title" data-i18n="step3"></div>
-                <div class="opt-panels-container">
-                    <div class="opt-panel opt-lesson">
-                        <div class="btn-group">
-                        <button class="mode-btn opt-item" data-val="stage1" data-i18n="stage1"></button>
-                        <button class="mode-btn opt-item" data-val="stage2" data-i18n="stage2"></button>
-                        <button class="mode-btn opt-item" data-val="stage3" data-i18n="stage3"></button>
-                        <button class="mode-btn opt-item" data-val="stage4" data-i18n="stage4"></button>
-                        </div>
-                    </div>
-                    <div class="opt-panel opt-grammar">
-                        <div class="btn-group">
-                        <button class="mode-btn opt-item" data-val="original" data-i18n="gOriginal"></button>
-                        <button class="mode-btn opt-item" data-val="neg" data-i18n="gNeg"></button>
-                        <button class="mode-btn opt-item" data-val="past" data-i18n="gPast"></button>
-                        <button class="mode-btn opt-item" data-val="te" data-i18n="gTe"></button>
-                        <button class="mode-btn opt-item" data-val="kedo" data-i18n="gKedo"></button>
-                        </div>
-                    </div>
-                    <div class="opt-panel opt-diff">
-                        <div class="btn-group">
-                        <button class="mode-btn opt-item" data-val="easy" data-i18n="diffEasy"></button>
-                        <button class="mode-btn opt-item" data-val="mixed" data-i18n="diffMixed"></button>
-                        </div>
-                    </div>
+                <div class="btn-group" id="base-mode-group">
+                    <button class="mode-btn base-mode" data-val="study" data-i18n="modeStudy"></button>
+                    <button class="mode-btn base-mode" data-val="challenge" data-i18n="modeChallenge"></button>
                 </div>
             </div>
         </div>
@@ -74,11 +48,17 @@
         <div class="screen-body">
             <div class="card">
                 <div class="score-row">
-                    <span data-i18n="scoreText"></span><span id="score-num">0</span>
-                    <div class="timer-text" id="timer-area"></div>
+                    <div class="score-right">
+                        <div class="progress-text" id="progress-area" style="display:none"></div>
+                        <div class="timer-text" id="timer-area"></div>
+                    </div>
+                    <span class="score-group"><span data-i18n="scoreText"></span><span id="score-num">0</span></span>
+                </div>
+                <div class="progress-bar" id="progress-bar">
+                    <div class="progress-fill fill-blue" id="progress-fill"></div>
                 </div>
                 <div class="q-box" id="question-area"></div>
-                <input id="ans-input">
+                <input id="ans-input" placeholder="Answer here...">
                 <div class="feed-box">
                     <div id="feed-area" data-i18n="inputTip"></div>
                 </div>
@@ -86,7 +66,6 @@
                     <button id="skip-btn" data-i18n="skipBtn"></button>
                     <button id="action-btn" data-i18n="checkBtn"></button>
                 </div>
-                <div class="note-text" id="note-area"></div>
             </div>
         </div>
         <div class="screen-footer">
@@ -137,8 +116,14 @@
     </div>
 </div>
 
-<script src="js/lang.js"></script>
-<script src="js/data.js"></script>
-<script src="js/main.js"></script>
+<!-- 动态加载 JS：每次刷新自动生成时间戳（?t=…）附加到路径后，避免浏览器缓存旧文件导致代码更新后看不到效果；无需再手动维护版本号 -->
+<script>
+    (function() {
+        var t = new Date().getTime();
+        document.write('<script src="js/lang.js?t=' + t + '"><\/script>');
+        document.write('<script src="js/data.js?t=' + t + '"><\/script>');
+        document.write('<script src="js/main.js?t=' + t + '"><\/script>');
+    })();
+</script>
 </body>
 </html>
