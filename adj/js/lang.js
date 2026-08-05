@@ -38,7 +38,6 @@ var langData = {
         tblQuestion:"設問",
         tblAnswer:"正解",
         tblUserAns:"自分の答え",
-        practiceMistakeBtn:"ミス問題を再練習"
     },
     en: {
         title:"Adjective Quiz",
@@ -79,6 +78,5 @@ var langData = {
         tblQuestion:"Meaning",
         tblAnswer:"Correct",
         tblUserAns:"Your answer",
-        practiceMistakeBtn:"Practice Mistakes"
     }
 };

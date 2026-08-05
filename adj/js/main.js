@@ -1,7 +1,5 @@
 var currentLang = 'en';
 var mistakeRecordList = [];
-var mistakeQuestionPool = [];
-var practiceMistakeMode = false;
 var baseMode = null;
 var subOpt = null;
 var score = 0;
@@ -28,6 +26,10 @@ function switchScreen(incoming, duration) {
     duration = duration || 350;
     var current = document.querySelector('.screen.active');
     if (current === incoming) return;
+    // 离开 summary 页面时淡出并清除彩条
+    if (current && current.id === 'summary-page') {
+        clearConfetti();
+    }
     // Activate incoming first so flex container always has a relative child
     incoming.classList.remove('exiting');
     void incoming.offsetWidth;
@@ -48,12 +50,6 @@ function animateScorePop() {
     setTimeout(function() {
         scoreEl.classList.remove('pop');
     }, 180);
-}
-
-function removeSolvedMistake(enText) {
-    mistakeRecordList = mistakeRecordList.filter(function(item) {
-        return item.questionText !== enText;
-    });
 }
 
 function renderLang() {
@@ -101,7 +97,7 @@ function refreshTimerText() {
 
 // 刷新已答题数进度（m / n），仅在学习模式显示
 function refreshProgressText() {
-    document.getElementById('progress-area').innerText = answeredCount + ' / ' + totalQuestionNum;
+    document.getElementById('progress-area').innerText = '📖 ' + answeredCount + ' / ' + totalQuestionNum;
 }
 
 // 刷新进度条（学习=已答数，挑战=剩余时间）
@@ -134,17 +130,6 @@ function refreshFeedbackText() {
     }
 }
 
-function shuffleArray(arr) {
-    var copy = arr.slice();
-    for (var i = copy.length - 1; i > 0; i--) {
-        var j = Math.floor(Math.random() * (i + 1));
-        var tmp = copy[i];
-        copy[i] = copy[j];
-        copy[j] = tmp;
-    }
-    return copy;
-}
-
 function getRandomWord() {
     return vocabulary[Math.floor(Math.random() * vocabulary.length)];
 }
@@ -163,15 +148,15 @@ function makeSingleForm(form, w) {
     } else if (form === 'neg') {
         target = politeRules.neg(w);
         plainTarget = plainRules.neg(w);
-        en = 'not ' + w.en;
+        en = 'NOT ' + w.en;
     } else if (form === 'past') {
         target = politeRules.past(w);
         plainTarget = plainRules.past(w);
-        en = 'was ' + w.en;
+        en = 'WAS ' + w.en;
     } else { // past_neg
         target = politeRules.past_neg(w);
         plainTarget = plainRules.past_neg(w);
-        en = 'was not ' + w.en;
+        en = 'WAS NOT ' + w.en;
     }
     return {
         en: en,
@@ -195,11 +180,11 @@ function makePairForm(form) {
     if (form === 'te') {
         target = politeRules.te(a) + b.base + 'です';
         plainTarget = plainRules.te(a) + (b.type === 'n' ? b.base + 'だ' : b.base);
-        en = a.en + ' and ' + b.en;
+        en = a.en + ' AND ' + b.en;
     } else { // kedo
         target = politeRules.kedo(a) + b.base + 'です';
         plainTarget = plainRules.kedo(a) + (b.type === 'n' ? b.base + 'だ' : b.base);
-        en = a.en + ' but ' + b.en;
+        en = a.en + ' BUT ' + b.en;
     }
     return {
         en: en,
@@ -212,17 +197,6 @@ function makePairForm(form) {
 
 // ====== 抽题（六类随机）=======
 function pickNextQuestion() {
-    if (practiceMistakeMode) {
-        if (mistakeQuestionPool.length <= 0) return null;
-        var m = mistakeQuestionPool.shift();
-        return {
-            en: m.en,
-            target: m.correctAns,
-            plainTarget: m.plainAns || '',
-            baseWord: m.baseWord || '',
-            form: m.form || 'original'
-        };
-    }
     var form = pickRandom(ALL_FORMS);
     if (form === 'te' || form === 'kedo') return makePairForm(form);
     return makeSingleForm(form, getRandomWord());
@@ -326,7 +300,7 @@ function checkAnswer(userInput) {
     currentWarnKey = null; // 进入正式判定后清除警告状态
 
     if (inputStr === currentQ.target) {
-        if (!practiceMistakeMode) attemptCount++; // 仅答对时在此增加尝试次数
+        attemptCount++; // 仅答对时在此增加尝试次数
         answeredCount++;
         refreshProgressText();
         refreshProgressBar();
@@ -341,10 +315,6 @@ function checkAnswer(userInput) {
         feedArea.className = 'correct-text';
         feedArea.innerHTML = '<div class="feed-line1">' + dict.correctTitle + '</div><div class="feed-line2">+10' + (currentLang === 'ja' ? '点' : 'pts') + '</div>';
         questionResultShown = true;
-        if (practiceMistakeMode) {
-            mistakeQuestionPool = mistakeQuestionPool.filter(function(item) { return item.en !== currentQ.en; });
-            removeSolvedMistake(currentQ.en);
-        }
     } else {
         finishAnswer(false);
     }
@@ -399,29 +369,27 @@ function finishAnswer(isTimeout, isSkip) {
     feedArea2.innerHTML = '<div class="feed-line1">' + title + '</div><div class="feed-line2">' + dict.answerPrefix + currentQ.target + '</div>';
     questionResultShown = true;
 
-    if (!practiceMistakeMode) {
-        // 尝试次数与错误次数必定无条件累加
-        wrongCount++;
-        attemptCount++;
-        
-        // 错题本单独去重
-        var alreadyExist = mistakeRecordList.some(function(r) { return r.questionText === currentQ.en; });
-        if (!alreadyExist) {
-            var uAns = document.getElementById('ans-input').value.trim();
-            if (isTimeout) uAns = '(TIMEOUT)';
-            else if (isSkip) uAns = '(SKIP)';
-            else if (!uAns) uAns = '(BLANK)';
+    // 尝试次数与错误次数必定无条件累加
+    wrongCount++;
+    attemptCount++;
+    
+    // 错题本单独去重
+    var alreadyExist = mistakeRecordList.some(function(r) { return r.questionText === currentQ.en; });
+    if (!alreadyExist) {
+        var uAns = document.getElementById('ans-input').value.trim();
+        if (isTimeout) uAns = '(TIMEOUT)';
+        else if (isSkip) uAns = '(SKIP)';
+        else if (!uAns) uAns = '(BLANK)';
 
-            mistakeRecordList.push({
-                en: currentQ.en,
-                questionText: currentQ.en,
-                correctAns: currentQ.target,
-                plainAns: currentQ.plainTarget,
-                baseWord: currentQ.baseWord,
-                form: currentQ.form,
-                userAns: uAns
-            });
-        }
+        mistakeRecordList.push({
+            en: currentQ.en,
+            questionText: currentQ.en,
+            correctAns: currentQ.target,
+            plainAns: currentQ.plainTarget,
+            baseWord: currentQ.baseWord,
+            form: currentQ.form,
+            userAns: uAns
+        });
     }
 }
 
@@ -462,8 +430,6 @@ document.addEventListener('DOMContentLoaded', function() {
         score = 0; attemptCount = 0; correctCount = 0; wrongCount = 0;
         answeredCount = 0;
         mistakeRecordList = [];
-        mistakeQuestionPool = [];
-        practiceMistakeMode = false;
         questionResultShown = false;
         currentWarnKey = null;
         document.getElementById('score-num').innerText = score;
@@ -501,28 +467,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (answerPhase) return;
         if (baseMode !== 'challenge') clearInterval(timerId); // 挑战模式全局计时，跳过不停表
         finishAnswer(false, true); // 跳过计入进度，且学习模式进度条变红
-    };
-
-    document.getElementById('practiceMistakeBtn').onclick = function() {
-        if (mistakeRecordList.length === 0) {
-            alert(currentLang === 'ja' ? 'ミスした問題はありません' : 'No mistakes in this session');
-            return;
-        }
-        practiceMistakeMode = true;
-        switchScreen(document.getElementById('quiz-page'));
-        answeredCount = 0;
-        mistakeQuestionPool = shuffleArray(mistakeRecordList.map(function(item) {
-            return {
-                en: item.en,
-                questionText: item.questionText,
-                correctAns: item.correctAns,
-                plainAns: item.plainAns,
-                baseWord: item.baseWord,
-                form: item.form
-            };
-        }));
-        currentWarnKey = null;
-        loadNewQuestion();
     };
 
     // IME-aware Enter key
@@ -578,15 +522,66 @@ function backToHome() {
     remainTime = totalTime;   // 重置全局计时
     timeExpired = false;
     mistakeRecordList = [];
-    mistakeQuestionPool = [];
-    practiceMistakeMode = false;
     questionResultShown = false;
     currentWarnKey = null;
+}
+
+// ====== Confetti (彩条飘落) ======
+var CONFETTI_COLORS = ['#ff718d', '#fdff6a', '#74f2ce', '#3ea6ff', '#ffb03a', '#b980ff'];
+var confettiTimers = [];
+
+function createConfetti(amount) {
+    var layer = document.getElementById('confetti-layer');
+    layer.classList.remove('fading');
+    for (var i = 0; i < amount; i++) {
+        var confetti = document.createElement('div');
+        confetti.classList.add('confetti');
+
+        var color = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+        var left = Math.random() * 100;
+        var width = Math.random() * 8 + 6;
+        var height = Math.random() * 20 + 15;
+        var duration = Math.random() * 1.3 + 1.2;
+        var delay = Math.random() * 0.8;
+        var startRot = Math.random() * 360;
+        var endRot = startRot + 360 + Math.random() * 720;
+
+        confetti.style.backgroundColor = color;
+        confetti.style.left = left + 'vw';
+        confetti.style.width = width + 'px';
+        confetti.style.height = height + 'px';
+        confetti.style.setProperty('--duration', duration + 's');
+        confetti.style.setProperty('--delay', delay + 's');
+        confetti.style.setProperty('--start-rot', startRot + 'deg');
+        confetti.style.setProperty('--end-rot', endRot + 'deg');
+
+        layer.appendChild(confetti);
+
+        // 动画结束后自动移除 DOM 元素，防止内存泄漏
+        (function(el, d, dl) {
+            confettiTimers.push(setTimeout(function() {
+                el.remove();
+            }, (d + dl) * 1000));
+        })(confetti, duration, delay);
+    }
+}
+
+// 退出 summary 页面时淡出并清除所有彩条
+function clearConfetti() {
+    confettiTimers.forEach(function(t) { clearTimeout(t); });
+    confettiTimers = [];
+    var layer = document.getElementById('confetti-layer');
+    layer.classList.add('fading');
+    setTimeout(function() {
+        layer.innerHTML = '';
+        layer.classList.remove('fading');
+    }, 550);
 }
 
 function showSummary() {
     clearInterval(timerId);
     switchScreen(document.getElementById('summary-page'));
+    createConfetti(100);
     document.getElementById('sumAttemptNum').innerText = attemptCount;
     document.getElementById('sumCorrectNum').innerText = correctCount;
     document.getElementById('sumWrongNum').innerText = wrongCount;
