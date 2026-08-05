@@ -178,8 +178,10 @@ h1 { text-align: center; font-size: 38px; color: #222; margin-bottom: 40px; }
 
 /* Bottom Buttons */
 .bottom-btn-group { display: flex; gap: 12px; margin-top: 30px; }
-.back-home { flex: 1; padding: 12px; font-size: 20px; min-height: 60px; border: 2px solid #cbd5e1; border-radius: var(--radius-md); background: #fff; color: #475569; }
-.back-home:hover:not(:disabled) { border-color: #94a3b8; background: #f8fafc; filter: none; }
+.back-home { flex: 1; padding: 12px; font-size: 20px; min-height: 60px; border: 2px solid var(--color-primary); border-radius: var(--radius-md); background: #fff; color: var(--color-primary); }
+.back-home:hover:not(:disabled) { border-color: #2563eb; background: var(--color-primary-light); filter: none; }
+.review-btn { border-color: #94a3b8; background: #fff; color: #64748b; }
+.review-btn:hover:not(:disabled) { border-color: #64748b; background: #f1f5f9; filter: none; }
 .end-session-btn { flex: 1; padding: 12px; font-size: 20px; min-height: 60px; border: 2px solid var(--color-danger); border-radius: var(--radius-md); background: #fff; color: var(--color-danger); }
 .end-session-btn:hover:not(:disabled) { background: #fef2f2; filter: none; }
 
@@ -189,10 +191,10 @@ h1 { text-align: center; font-size: 38px; color: #222; margin-bottom: 40px; }
 .mistake-table { width: 100%; border-collapse: collapse; margin: 24px 0; }
 .mistake-table th, .mistake-table td { border: 1px solid #ddd; padding: 10px; font-size: 17px; text-align: center; }
 .mistake-table th { background: #f3f4f6; }
-.summary-btn-group { display: flex; margin-top: 20px; }
-.summary-btn-group .back-home { width: 100%; flex: 1; }
-
-/* Step sections (纯淡入，无展开/擦除效果) */
+.summary-btn-group { display: flex; gap: 12px; margin-top: 20px; }
+.summary-btn-group .back-home { flex: 1; }
+.summary-btn-group .back-home:not(.review-btn) { background: var(--color-primary); border-color: var(--color-primary); color: #fff; font-weight: 700; }
+.summary-btn-group .back-home:not(.review-btn):hover:not(:disabled) { background: #2563eb; border-color: #2563eb; filter: none; }
 .step-section { max-height: 0; overflow: hidden; opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease; }
 .step-section.visible { max-height: 500px; opacity: 1; visibility: visible; }
 
