@@ -287,7 +287,7 @@ function startTimer() {
             clearInterval(timerId);
             timeExpired = true;
             if (!answerPhase) {
-                finishAnswer(true); // 计时归零且当前题未作答时按超时判错
+                finishAnswer(true, false); // 计时归零且当前题未作答时按超时判错
             }
         }
     }, 1000);
@@ -324,9 +324,9 @@ function checkAnswer(userInput) {
     // ------ 正式判定（不可撤销）------
     if (baseMode !== 'challenge') clearInterval(timerId); // 学习模式答完停（无计时器）；挑战模式为全局计时不停
     currentWarnKey = null; // 进入正式判定后清除警告状态
-    if (!practiceMistakeMode) attemptCount++;
 
     if (inputStr === currentQ.target) {
+        if (!practiceMistakeMode) attemptCount++; // 仅答对时在此增加尝试次数
         answeredCount++;
         refreshProgressText();
         refreshProgressBar();
@@ -346,22 +346,6 @@ function checkAnswer(userInput) {
             removeSolvedMistake(currentQ.en);
         }
     } else {
-        if (!practiceMistakeMode) {
-            var alreadyExist = mistakeRecordList.some(function(r) { return r.questionText === currentQ.en; });
-            if (!alreadyExist) {
-                wrongCount++;
-                attemptCount++;
-                mistakeRecordList.push({
-                    en: currentQ.en,
-                    questionText: currentQ.en,
-                    correctAns: currentQ.target,
-                    plainAns: currentQ.plainTarget,
-                    baseWord: currentQ.baseWord,
-                    form: currentQ.form,
-                    userAns: inputStr
-                });
-            }
-        }
         finishAnswer(false);
     }
 }
@@ -388,8 +372,9 @@ function showWarnFeed(key) {
     feedArea.innerHTML = '<div class="feed-line1">' + lines.line1 + '</div>' + (lines.line2 ? '<div class="feed-line2">' + lines.line2 + '</div>' : '');
 }
 
-function finishAnswer(isTimeout) {
+function finishAnswer(isTimeout, isSkip) {
     isTimeout = isTimeout || false;
+    isSkip = isSkip || false;
     var dict = langData[currentLang];
 
     currentWarnKey = null; // skip / 超时 / 错误 均离开警告状态
@@ -415,10 +400,18 @@ function finishAnswer(isTimeout) {
     questionResultShown = true;
 
     if (!practiceMistakeMode) {
+        // 尝试次数与错误次数必定无条件累加
+        wrongCount++;
+        attemptCount++;
+        
+        // 错题本单独去重
         var alreadyExist = mistakeRecordList.some(function(r) { return r.questionText === currentQ.en; });
         if (!alreadyExist) {
-            wrongCount++;
-            attemptCount++;
+            var uAns = document.getElementById('ans-input').value.trim();
+            if (isTimeout) uAns = '(TIMEOUT)';
+            else if (isSkip) uAns = '(SKIP)';
+            else if (!uAns) uAns = '(BLANK)';
+
             mistakeRecordList.push({
                 en: currentQ.en,
                 questionText: currentQ.en,
@@ -426,7 +419,7 @@ function finishAnswer(isTimeout) {
                 plainAns: currentQ.plainTarget,
                 baseWord: currentQ.baseWord,
                 form: currentQ.form,
-                userAns: document.getElementById('ans-input').value.trim()
+                userAns: uAns
             });
         }
     }
@@ -507,22 +500,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('skip-btn').onclick = function() {
         if (answerPhase) return;
         if (baseMode !== 'challenge') clearInterval(timerId); // 挑战模式全局计时，跳过不停表
-        var userInput = document.getElementById('ans-input').value.trim();
-        if (!practiceMistakeMode) {
-            var alreadyExist = mistakeRecordList.some(function(r) { return r.questionText === currentQ.en; });
-            if (!alreadyExist) {
-                mistakeRecordList.push({
-                    en: currentQ.en,
-                    questionText: currentQ.en,
-                    correctAns: currentQ.target,
-                    plainAns: currentQ.plainTarget,
-                    baseWord: currentQ.baseWord,
-                    form: currentQ.form,
-                    userAns: userInput || '(SKIP)'
-                });
-            }
-        }
-        finishAnswer(false); // 跳过计入进度，且学习模式进度条变红
+        finishAnswer(false, true); // 跳过计入进度，且学习模式进度条变红
     };
 
     document.getElementById('practiceMistakeBtn').onclick = function() {
