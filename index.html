@@ -2,13 +2,33 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="0;url=adj/JPL002-game-adj-v3.html">
     <title>正在跳转...</title>
     <script>
-        window.location.replace("adj/JPL002-game-adj-v3.html");
+        (function() {
+            var path = window.location.pathname;
+            
+            // 如果路径末尾带文件名（如 /index.html），去除文件名保留前面路径
+            if (path.substring(path.lastIndexOf('/') + 1).includes('.html')) {
+                path = path.substring(0, path.lastIndexOf('/') + 1);
+            }
+            // 如果末尾缺少斜杠（如 /JPL002-games-2026），自动补上斜杠
+            if (!path.endsWith('/')) {
+                path += '/';
+            }
+            
+            // 拼出正确路径并跳转
+            window.location.replace(path + 'adj/JPL002-game-adj-v3.html');
+        })();
     </script>
 </head>
 <body>
-    <p>如果页面没有自动跳转，请<a href="adj/JPL002-game-adj-v3.html">点击这里</a>。</p>
+    <p>正在跳转... 如果页面未响应，请<a id="fallback" href="#">点击这里</a>。</p>
+    <script>
+        // 手动点击链接的动态兜底
+        var p = window.location.pathname;
+        if (p.substring(p.lastIndexOf('/') + 1).includes('.html')) p = p.substring(0, p.lastIndexOf('/') + 1);
+        if (!p.endsWith('/')) p += '/';
+        document.getElementById('fallback').href = p + 'adj/JPL002-game-adj-v3.html';
+    </script>
 </body>
 </html>
