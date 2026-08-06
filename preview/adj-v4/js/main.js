@@ -419,16 +419,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     document.getElementById('start-quiz').onclick = function() {
+        resetAllState({ keepMode: true }); // 保留已选模式，统一清理其余状态
         switchScreen(document.getElementById('quiz-page'));
-        score = 0; attemptCount = 0; correctCount = 0; wrongCount = 0;
-        answeredCount = 0;
-        mistakeRecordList = [];
-        questionResultShown = false;
-        currentWarnKey = null;
-        document.getElementById('score-num').innerText = score;
         if (baseMode === 'challenge') {
-            remainTime = totalTime; // 开局重置全局计时
-            timeExpired = false;
             startTimer(); // 全局计时只启动一次，换题不停
         }
         loadNewQuestion();
@@ -462,6 +455,11 @@ document.addEventListener('DOMContentLoaded', function() {
         finishAnswer(false, true); // 跳过计入进度，且学习模式进度条变红
     };
 
+    // Review 模态窗口：点击按钮打开，点击遮罩或关闭按钮关闭
+    document.getElementById('review-btn').onclick = function() {
+        openReviewModal();
+    };
+
     // IME-aware Enter key
     var ansInput = document.getElementById('ans-input');
     var isComposing = false;
@@ -484,47 +482,87 @@ function updateStartBtnState() {
     document.getElementById('start-quiz').disabled = !ready;
 }
 
-function backToHome() {
+// ====== Review 模态窗口 ======
+function openReviewModal() {
+    document.getElementById('review-modal').classList.add('show');
+}
+
+function closeReviewModal() {
+    document.getElementById('review-modal').classList.remove('show');
+}
+
+// ====== 统一状态清理函数 ======
+// opts.keepMode: true 时保留 baseMode / subOpt（Play Again 沿用上次选择），其余全部清空
+function resetAllState(opts) {
+    opts = opts || {};
+    // 停止计时器
     clearInterval(timerId);
-    resetActionRow(); // 返回首页前先复位按钮为两个（Split + Check），避免下次开始时才从合并的 Next 变回
+    // 清除彩条（若在 summary 页面）
+    clearConfetti();
+    // 复位答题按钮 DOM（Skip + Check 拆分状态）
+    resetActionRow();
+    // 清空错题表 DOM 防残留
+    var tbody = document.getElementById('mistakeTableBody');
+    if (tbody) tbody.innerHTML = '';
+    // 重置全部运行态变量
+    score = 0; attemptCount = 0; correctCount = 0; wrongCount = 0;
+    answeredCount = 0;
+    remainTime = totalTime;
+    timeExpired = false;
+    mistakeRecordList = [];
+    questionResultShown = false;
+    currentWarnKey = null;
+    currentQ = null;
+    studyWrongState = false;
+    document.getElementById('score-num').innerText = score;
+    // 模式选择：默认清空，keepMode 时保留
+    if (!opts.keepMode) {
+        baseMode = null;
+        subOpt = null;
+    }
+    updateStartBtnState();
+}
+
+// ====== Exit：清空状态并返回首页（index） ======
+function exitGame() {
+    resetAllState(); // 完全清空状态（含模式选择）
+    // 返回根目录 index.html（从 preview/adj-v4/ 上跳两级）
+    window.location.href = '../../index.html';
+}
+
+function backToHome() {
+    // 保留 baseMode / subOpt（Play Again 沿用上次选择），其余状态统一清理
+    resetAllState({ keepMode: true });
     switchScreen(document.getElementById('home'));
 
-    var prevBaseMode = baseMode;
-    var prevSubOpt = subOpt;
-
     // Restore step visibility
-    if (prevBaseMode) { document.getElementById('step1-section').classList.add('visible'); }
+    if (baseMode) { document.getElementById('step1-section').classList.add('visible'); }
 
     document.querySelectorAll('.base-mode').forEach(function(b) { b.classList.remove('active'); });
     document.querySelectorAll('.opt-item').forEach(function(b) { b.classList.remove('active'); });
 
     // Re-highlight previously selected buttons
-    if (prevBaseMode) {
-        var baseBtn = document.querySelector('.base-mode[data-val="' + prevBaseMode + '"]');
+    if (baseMode) {
+        var baseBtn = document.querySelector('.base-mode[data-val="' + baseMode + '"]');
         if (baseBtn) baseBtn.classList.add('active');
     }
-    if (prevSubOpt) {
-        var optBtn = document.querySelector('.opt-item[data-val="' + prevSubOpt + '"]');
+    if (subOpt) {
+        var optBtn = document.querySelector('.opt-item[data-val="' + subOpt + '"]');
         if (optBtn) optBtn.classList.add('active');
     }
-
-    baseMode = prevBaseMode; subOpt = prevSubOpt;
-    updateStartBtnState();
-    score = 0; attemptCount = 0; correctCount = 0; wrongCount = 0;
-    answeredCount = 0;
-    remainTime = totalTime;   // 重置全局计时
-    timeExpired = false;
-    mistakeRecordList = [];
-    questionResultShown = false;
-    currentWarnKey = null;
 }
 
 // ====== Confetti (彩条飘落) ======
 var CONFETTI_COLORS = ['#ff718d', '#fdff6a', '#74f2ce', '#3ea6ff', '#ffb03a', '#b980ff'];
 var confettiTimers = [];
+var confettiClearTimer = null; // 延迟清除彩条层的计时器：避免旧代际的清除误删新彩条
 
 function createConfetti(amount) {
+    // 若有挂起的延迟清除，先取消，防止 550ms 后误删本次新创建的彩条
+    if (confettiClearTimer) { clearTimeout(confettiClearTimer); confettiClearTimer = null; }
     var layer = document.getElementById('confetti-layer');
+    // 同步清空残留彩条 DOM（如快速重开后旧彩条未被清除的情况），确保本轮只显示新彩条
+    layer.innerHTML = '';
     layer.classList.remove('fading');
     for (var i = 0; i < amount; i++) {
         var confetti = document.createElement('div');
@@ -563,11 +601,14 @@ function createConfetti(amount) {
 function clearConfetti() {
     confettiTimers.forEach(function(t) { clearTimeout(t); });
     confettiTimers = [];
+    // 取消之前挂起的延迟清除，重新登记本次
+    if (confettiClearTimer) { clearTimeout(confettiClearTimer); }
     var layer = document.getElementById('confetti-layer');
     layer.classList.add('fading');
-    setTimeout(function() {
+    confettiClearTimer = setTimeout(function() {
         layer.innerHTML = '';
         layer.classList.remove('fading');
+        confettiClearTimer = null;
     }, 550);
 }
 

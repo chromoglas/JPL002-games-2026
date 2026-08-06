@@ -9,6 +9,7 @@
 <body>
 <div class="wrap">
     <div class="lang-switch-box">
+        <button class="exit-btn" id="exit-btn" onclick="exitGame()" data-i18n="exitText"></button>
         <div class="lang-switch" id="lang-switch" role="group" aria-label="Language">
             <div class="lang-slider" aria-hidden="true"></div>
             <button class="lang-btn active" id="lang-en" type="button">EN</button>
@@ -70,7 +71,6 @@
         </div>
         <div class="screen-footer">
             <div class="bottom-btn-group">
-                <button class="back-home" onclick="backToHome()" data-i18n="backBtn"></button>
                 <button class="end-session-btn" onclick="showSummary()" data-i18n="endSessionBtn"></button>
             </div>
         </div>
@@ -107,7 +107,7 @@
         </div>
         <div class="screen-footer">
             <div class="summary-btn-group">
-                <button class="back-home review-btn" data-i18n="reviewBtn"></button>
+                <button class="back-home review-btn" id="review-btn" data-i18n="reviewBtn"></button>
                 <button class="back-home" onclick="backToHome()" data-i18n="backBtn"></button>
             </div>
         </div>
@@ -118,6 +118,14 @@
 
 <!-- 全局彩条层：fixed 定位覆盖整个视口，进入 summary 时飘落，退出时淡出清除 -->
 <div class="confetti-layer" id="confetti-layer"></div>
+
+<!-- Review 模态窗口：点击遮罩或关闭按钮关闭 -->
+<div class="modal-overlay" id="review-modal" onclick="closeReviewModal()">
+    <div class="modal-box" onclick="event.stopPropagation()">
+        <p class="modal-text">test</p>
+        <button class="modal-close" onclick="closeReviewModal()" data-i18n="closeBtn"></button>
+    </div>
+</div>
 
 <!-- 动态加载 JS：每次刷新自动生成时间戳（?t=…）附加到路径后，避免浏览器缓存旧文件导致代码更新后看不到效果；无需再手动维护版本号 -->
 <script>

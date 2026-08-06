@@ -26,7 +26,7 @@ var langData = {
         skipBtn:"スキップ",
         checkBtn:"チェック",
         continueBtn:"次へ",
-        backBtn:"ホームに戻る",
+        backBtn:"もう一度プレイ",
         reviewBtn:"復習",
         endSessionBtn:"セッション終了",
         summaryTitle:"セッション集計",
@@ -39,6 +39,8 @@ var langData = {
         tblQuestion:"設問",
         tblAnswer:"正解",
         tblUserAns:"自分の答え",
+        exitText:"◀ 終了",
+        closeBtn:"閉じる",
     },
     en: {
         title:"Adjective Quiz",
@@ -67,9 +69,9 @@ var langData = {
         skipBtn:"Skip",
         checkBtn:"Check",
         continueBtn:"Continue",
-        backBtn:"Back Home",
-        reviewBtn:"Review",
-        endSessionBtn:"End Session",
+        backBtn:"PLAY AGAIN",
+        reviewBtn:"REVIEW",
+        endSessionBtn:"END SESSION",
         summaryTitle:"Session Summary",
         sumAttempt:"Attempted: ",
         sumCorrect:"Correct: ",
@@ -80,5 +82,7 @@ var langData = {
         tblQuestion:"Meaning",
         tblAnswer:"Correct",
         tblUserAns:"Your answer",
+        exitText:"◀ EXIT",
+        closeBtn:"CLOSE",
     }
 };

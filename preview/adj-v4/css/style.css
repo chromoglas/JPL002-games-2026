@@ -29,8 +29,20 @@ body { background-color: #f7f8fc; padding: 40px 20px; min-height: 100dvh; displa
 .wrap { max-width: 900px; margin: 0 auto; width: 100%; flex: 1; display: flex; flex-direction: column; min-height: 0; }
 .screens-container { position: relative; flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
 
-/* Language Switch */
-.lang-switch-box { display: flex; justify-content: flex-end; margin-bottom: 20px; }
+/* Language Switch 与 Exit 轴对称布局：Exit 在左、语言滑块在右、垂直居中 */
+.lang-switch-box { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+
+/* Exit Button（黑色文本，无链接样式） */
+.exit-btn {
+    background: transparent;
+    border: none;
+    padding: 4px 8px;
+    font-size: 22px;
+    font-weight: 700;
+    color: #222;
+    cursor: pointer;
+}
+.exit-btn:hover { background: rgba(0, 0, 0, 0.06); }
 .lang-switch { position: relative; display: grid; grid-template-columns: 1fr 1fr; background: #e2e8f0; border-radius: 999px; padding: 4px; border: 1px solid var(--color-border); }
 .lang-slider { position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px); background: var(--color-primary); border-radius: 999px; box-shadow: 0 1px 4px rgba(59, 130, 246, 0.35); transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1); pointer-events: none; }
 .lang-switch.ja .lang-slider { transform: translateX(100%); }
@@ -81,7 +93,6 @@ body { background-color: #f7f8fc; padding: 40px 20px; min-height: 100dvh; displa
 .screen-footer { 
     flex-shrink: 0;
     padding-top: 12px; 
-    background: #f7f8fc; 
 }
 
 /* Typography */
@@ -96,11 +107,11 @@ h1 { text-align: center; font-size: 38px; color: #222; margin-bottom: 40px; }
 .mode-btn { padding: 10px 18px; font-size: 16px; font-weight: 500; min-height: 44px; border: 2px solid var(--color-border); border-radius: var(--radius-md); background: #fff; color: #334155; }
 .mode-btn:hover:not(.active):not(:disabled) { border-color: #cbd5e1; background: #f8fafc; filter: none; }
 .mode-btn.active { background: var(--color-primary); color: #fff; border-color: var(--color-primary); box-shadow: 0 0 0 3px var(--color-primary-light); filter: none; }
-.start-btn { width: 100%; padding: 18px; font-size: 22px; font-weight: 600; margin-top: 40px; border: none; border-radius: var(--radius-lg); background: var(--color-success); color: #fff; box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3); }
-.start-btn:not(:disabled):hover { filter: brightness(1.03); box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4); }
+.start-btn { width: 100%; padding: 18px; font-size: 22px; font-weight: 600; margin-top: 40px; border: none; border-radius: var(--radius-lg); background: var(--color-success); color: #fff; box-shadow: 0 1px 3px rgba(34, 197, 94, 0.15); }
+.start-btn:not(:disabled):hover { filter: brightness(1.03); box-shadow: 0 2px 6px rgba(34, 197, 94, 0.2); }
 
 /* Card */
-.card { background: white; padding: 36px 30px; border-radius: 20px; box-shadow: 0 2px 14px #e0e5ef; }
+.card { background: white; padding: 36px 30px; border-radius: 20px; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04); }
 
 /* Quiz Elements */
 .score-row { display: flex; justify-content: space-between; font-size: 24px; margin-bottom: 30px; }
@@ -238,3 +249,38 @@ h1 { text-align: center; font-size: 38px; color: #222; margin-bottom: 40px; }
         opacity: 0;
     }
 }
+
+/* Review 模态窗口：遮罩变暗 + 居中弹窗 */
+.modal-overlay {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 20000;
+}
+.modal-overlay.show { display: flex; }
+.modal-box {
+    background: #fff;
+    border-radius: 14px;
+    padding: 30px 36px;
+    text-align: center;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+    min-width: 260px;
+}
+.modal-text { font-size: 20px; color: #333; margin: 0 0 22px; }
+.modal-close {
+    padding: 10px 30px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    background: var(--color-primary);
+    color: #fff;
+    cursor: pointer;
+}
+.modal-close:hover { background: #2563eb; }
