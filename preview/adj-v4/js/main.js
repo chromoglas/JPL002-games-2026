@@ -419,13 +419,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     document.getElementById('start-quiz').onclick = function() {
-        if (!baseMode || !subOpt) {
-            var dict2 = langData[currentLang];
-            alert(currentLang === 'ja'
-                ? 'モードとオプションをすべて選択してください'
-                : 'Please select mode and options first');
-            return;
-        }
         switchScreen(document.getElementById('quiz-page'));
         score = 0; attemptCount = 0; correctCount = 0; wrongCount = 0;
         answeredCount = 0;

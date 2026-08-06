@@ -5,62 +5,178 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>选择游戏版本</title>
     <style>
-        /* 简单的页面和按钮美化 */
+        * { box-sizing: border-box; }
         body {
             font-family: system-ui, -apple-system, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
+            padding: 40px 20px;
             background-color: #f3f4f6;
         }
+        .screen { display: none; }
+        .screen.active { display: flex; flex-direction: column; }
+
         .container {
             background: white;
             padding: 40px 50px;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
             text-align: center;
+            max-width: 460px;
+            width: 100%;
         }
-        h1 {
-            margin-top: 0;
-            color: #1f2937;
-            font-size: 24px;
-            margin-bottom: 30px;
-        }
-        .btn {
+
+        /* 主按钮：绿色开始游戏 */
+        .btn-start {
             display: block;
             width: 100%;
-            padding: 14px 24px;
-            margin-bottom: 16px;
+            padding: 16px 24px;
+            margin: 0 0 36px;
+            font-size: 20px;
+            font-weight: 600;
+            color: white;
+            background-color: #22c55e;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 8px rgba(34, 197, 94, 0.25);
+        }
+        .btn-start:hover {
+            background-color: #16a34a;
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.35);
+        }
+
+        /* 分类标题 */
+        .section-title {
+            margin: 28px 0 10px;
+            color: #4b5563;
+            font-size: 15px;
+            font-weight: 600;
+            text-align: left;
+            letter-spacing: 0.5px;
+        }
+        .section-title:first-of-type {
+            margin-top: 0;
+        }
+
+        /* 链接列表 */
+        .link-list {
+            border-top: 1px solid #e5e7eb;
+        }
+        .link-list a {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 13px 14px;
+            color: #1f2937;
+            font-size: 15px;
+            font-weight: 500;
+            text-decoration: none;
+            border-bottom: 1px solid #f3f4f6;
+            transition: background-color 0.15s;
+            cursor: pointer;
+        }
+        .link-list a:hover {
+            background-color: #f9fafb;
+        }
+        .link-list .arrow {
+            color: #9ca3af;
+            font-size: 14px;
+        }
+        .link-list .tag {
+            font-size: 12px;
+            color: #6b7280;
+            background: #f3f4f6;
+            border-radius: 999px;
+            padding: 2px 10px;
+            font-weight: 400;
+        }
+        .warn-text {
+            margin: 12px 0 6px;
+            font-size: 13px;
+            color: #b45309;
+            text-align: left;
+        }
+
+        /* ===== 内嵌 Screen（回顾旧版） ===== */
+        .embedded-screen {
+            max-width: 1000px;
+            width: 100%;
+            height: 92vh;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+        .embedded-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 14px 20px;
+            background: #f9fafb;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .embedded-header .title {
             font-size: 16px;
+            font-weight: 600;
+            color: #1f2937;
+        }
+        .btn-back {
+            padding: 8px 20px;
+            font-size: 14px;
             font-weight: 500;
             color: white;
-            background-color: #3b82f6; /* 主按钮颜色：蓝色 */
+            background-color: #6b7280;
             border: none;
             border-radius: 8px;
             cursor: pointer;
             transition: background-color 0.2s;
         }
-        .btn:hover {
-            background-color: #2563eb;
-        }
-        .btn-old {
-            background-color: #6b7280; /* 旧版按钮颜色：灰色 */
-            margin-bottom: 0;
-        }
-        .btn-old:hover {
+        .btn-back:hover {
             background-color: #4b5563;
+        }
+        .embedded-frame-wrap {
+            flex: 1;
+            min-height: 0;
+        }
+        .embedded-frame-wrap iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>请选择版本</h1>
-        <!-- 两个按钮分别调用同一个 JS 函数，传入对应的目标路径 -->
-        <button class="btn" onclick="navigateTo('adj/adj-v4.html')">进入新版 (v4)</button>
-        <button class="btn btn-old" onclick="navigateTo('archived/adj-v3/JPL002-game-adj-v3.html')">回到旧版 (v3)</button>
+    <!-- ===== 版本选择 Screen ===== -->
+    <div class="container screen active" id="home-screen">
+        <!-- V3 主按钮（绿色） -->
+        <button class="btn-start" onclick="navigateTo('games/adj-v3/JPL002-game-adj-v3.html')">开始游戏</button>
+
+        <!-- 抢先体验 -->
+        <div class="section-title">🚀 抢先体验</div>
+        <div class="link-list" id="preview-list"></div>
+
+        <!-- 回顾旧版 -->
+        <div class="section-title">📜 回顾旧版</div>
+        <p class="warn-text">⚠️ 远古版本仅供考古，不保证功能正常</p>
+        <div class="link-list" id="archived-list"></div>
+    </div>
+
+    <!-- ===== 内嵌 Screen（回顾旧版） ===== -->
+    <div class="embedded-screen screen" id="embedded-screen">
+        <div class="embedded-header">
+            <span class="title" id="embedded-title"></span>
+            <button class="btn-back" onclick="closeEmbedded()">← 返回</button>
+        </div>
+        <div class="embedded-frame-wrap">
+            <iframe id="embedded-frame" title="Embedded Game" allowfullscreen></iframe>
+        </div>
     </div>
 
     <script>
@@ -80,6 +196,91 @@
             // 拼出完整的相对路径并跳转
             window.location.href = path + targetPath;
         }
+
+        function buildPath(targetPath) {
+            var path = window.location.pathname;
+            if (path.substring(path.lastIndexOf('/') + 1).includes('.html')) {
+                path = path.substring(0, path.lastIndexOf('/') + 1);
+            }
+            if (!path.endsWith('/')) {
+                path += '/';
+            }
+            return path + targetPath;
+        }
+
+        // ===== 游戏配置 =====
+        // embed: true  = 内嵌窗口显示（本页提供返回按钮）
+        // embed: false = 直接跳转（游戏自带返回按钮时使用，此模式预留接口）
+        var PREVIEW_GAMES = [
+            { name: '新版 v4', tag: '预览版', path: 'preview/adj-v4/adj-v4.html', embed: false }
+        ];
+        var ARCHIVED_GAMES = [
+            { name: 'Ancient: Beta 1', path: 'archived/ancient/JPL002-game-adj-beta-1.html', embed: true },
+            { name: 'Ancient: Beta 2', path: 'archived/ancient/JPL002-game-adj-beta-2.html', embed: true },
+            { name: 'Ancient: Beta 3', path: 'archived/ancient/JPL002-game-adj-beta-3.html', embed: true },
+            { name: 'Ancient: v1', path: 'archived/ancient/JPL002-game-adj-v1.html', embed: true },
+            { name: 'Ancient: v2', path: 'archived/ancient/JPL002-game-adj-v2.html', embed: true }
+        ];
+
+        // ===== 链接列表渲染 =====
+        function renderLinks(listEl, games) {
+            listEl.innerHTML = '';
+            games.forEach(function(game) {
+                var a = document.createElement('a');
+                a.href = 'javascript:void(0)';
+                a.onclick = function() { openGame(game); };
+
+                var spanName = document.createElement('span');
+                spanName.textContent = game.name;
+                if (game.tag) {
+                    var tag = document.createElement('span');
+                    tag.className = 'tag';
+                    tag.textContent = game.tag;
+                    spanName.appendChild(document.createTextNode(' '));
+                    spanName.appendChild(tag);
+                }
+
+                var arrow = document.createElement('span');
+                arrow.className = 'arrow';
+                arrow.textContent = '→';
+
+                a.appendChild(spanName);
+                a.appendChild(arrow);
+                listEl.appendChild(a);
+            });
+        }
+
+        // ===== 打开游戏（统一入口，支持两种模式） =====
+        function openGame(game) {
+            if (game.embed === false) {
+                navigateTo(game.path); // 直接跳转：游戏自带返回按钮
+            } else {
+                openEmbedded(game.path, game.name); // 内嵌窗口：本页提供返回按钮
+            }
+        }
+
+        // ===== 内嵌窗口逻辑 =====
+        function openEmbedded(targetPath, title) {
+            var frame = document.getElementById('embedded-frame');
+            frame.src = buildPath(targetPath); // 先加载游戏
+            document.getElementById('embedded-title').innerText = title;
+            document.getElementById('home-screen').classList.remove('active');
+            document.getElementById('embedded-screen').classList.add('active');
+        }
+
+        function closeEmbedded() {
+            // 清除 iframe 状态：先移除 src 再重置为 about:blank，彻底卸载游戏
+            var frame = document.getElementById('embedded-frame');
+            frame.removeAttribute('src');
+            frame.src = 'about:blank';
+            document.getElementById('embedded-title').innerText = '';
+            document.getElementById('embedded-screen').classList.remove('active');
+            document.getElementById('home-screen').classList.add('active');
+        }
+
+        // 初始化渲染
+        renderLinks(document.getElementById('preview-list'), PREVIEW_GAMES);
+        renderLinks(document.getElementById('archived-list'), ARCHIVED_GAMES);
     </script>
 
 </body>
