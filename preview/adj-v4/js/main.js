@@ -1,5 +1,5 @@
 var currentLang = 'en';
-var mistakeRecordList = [];
+var recordList = [];
 var baseMode = null;
 var subOpt = null;
 var score = 0;
@@ -71,11 +71,7 @@ function renderLang() {
     // 输入框占位符跟随语言切换
     document.getElementById('ans-input').placeholder = dict['inputPlaceholder'];
     if (currentQ) {
-        if (currentLang === 'ja') {
-            document.getElementById('question-area').innerText = '意味：' + currentQ.en;
-        } else {
-            document.getElementById('question-area').innerText = 'Meaning: ' + currentQ.en;
-        }
+        document.getElementById('question-area').innerText = currentQ.en;
         refreshTimerText();
         if (questionResultShown) {
             refreshFeedbackText();
@@ -202,6 +198,13 @@ function pickNextQuestion() {
     return makeSingleForm(form, getRandomWord());
 }
 
+function updateActionBtnState() {
+    var btn = document.getElementById('action-btn');
+    if (answerPhase) return;
+    var inputVal = document.getElementById('ans-input').value.trim();
+    btn.disabled = (inputVal === '');
+}
+
 function resetActionRow() {
     answerPhase = false;
     var row = document.getElementById('action-row');
@@ -209,6 +212,7 @@ function resetActionRow() {
     var actionBtn = document.getElementById('action-btn');
     actionBtn.classList.remove('wrong');
     actionBtn.innerText = langData[currentLang]['checkBtn'];
+    updateActionBtnState();
 }
 
 function loadNewQuestion() {
@@ -222,13 +226,10 @@ function loadNewQuestion() {
     }
     currentQ = q;
     questionResultShown = false;
-    if (currentLang === 'ja') {
-        document.getElementById('question-area').innerText = '意味：' + currentQ.en;
-    } else {
-        document.getElementById('question-area').innerText = 'Meaning: ' + currentQ.en;
-    }
+    document.getElementById('question-area').innerText = currentQ.en;
     document.getElementById('ans-input').value = '';
     document.getElementById('ans-input').readOnly = false;
+    updateActionBtnState();
     var feedArea = document.getElementById('feed-area');
     feedArea.innerText = langData[currentLang]['inputTip'];
     feedArea.className = '';
@@ -272,6 +273,7 @@ function enterAnsweredState(isCorrect) {
     var row = document.getElementById('action-row');
     row.classList.add('answered');
     var actionBtn = document.getElementById('action-btn');
+    actionBtn.disabled = false;
     actionBtn.innerText = langData[currentLang]['continueBtn'];
     if (!isCorrect) {
         actionBtn.classList.add('wrong');
@@ -300,7 +302,7 @@ function checkAnswer(userInput) {
     currentWarnKey = null; // 进入正式判定后清除警告状态
 
     if (inputStr === currentQ.target) {
-        attemptCount++; // 仅答对时在此增加尝试次数
+        attemptCount++;
         answeredCount++;
         refreshProgressText();
         refreshProgressBar();
@@ -315,6 +317,13 @@ function checkAnswer(userInput) {
         feedArea.className = 'correct-text';
         feedArea.innerHTML = '<div class="feed-line1">' + dict.correctTitle + '</div><div class="feed-line2">+10' + (currentLang === 'ja' ? '点' : 'pts') + '</div>';
         questionResultShown = true;
+        // 记录正确回答
+        recordList.push({
+            en: currentQ.en,
+            correctAns: currentQ.target,
+            userAns: inputStr,
+            isCorrect: true
+        });
     } else {
         finishAnswer(false);
     }
@@ -364,7 +373,7 @@ function finishAnswer(isTimeout, isSkip) {
     enterAnsweredState(false);
 
     var feedArea2 = document.getElementById('feed-area');
-    feedArea2.className = isTimeout ? 'timeout-text' : 'wrong-text'; // 超时用独立 class，便于切换语言时保持 Time's up 且可单独着色
+    feedArea2.className = isTimeout ? 'timeout-text' : 'wrong-text';
     var title = isTimeout ? dict.timeOverTitle : dict.wrongTitle;
     feedArea2.innerHTML = '<div class="feed-line1">' + title + '</div><div class="feed-line2">' + dict.answerPrefix + currentQ.target + '</div>';
     questionResultShown = true;
@@ -373,28 +382,23 @@ function finishAnswer(isTimeout, isSkip) {
     wrongCount++;
     attemptCount++;
     
-    // 错题本单独去重
-    var alreadyExist = mistakeRecordList.some(function(r) { return r.questionText === currentQ.en; });
-    if (!alreadyExist) {
-        var uAns = document.getElementById('ans-input').value.trim();
-        if (isTimeout) uAns = '(TIMEOUT)';
-        else if (isSkip) uAns = '(SKIP)';
-        else if (!uAns) uAns = '(BLANK)';
+    // 记录错误/跳过/超时回答（全部计入，不提前判断重复）
+    var uAns = document.getElementById('ans-input').value.trim();
+    if (isTimeout) uAns = '(TIMEOUT)';
+    else if (isSkip) uAns = '(SKIP)';
+    else if (!uAns) uAns = '(BLANK)';
 
-        mistakeRecordList.push({
-            en: currentQ.en,
-            questionText: currentQ.en,
-            correctAns: currentQ.target,
-            plainAns: currentQ.plainTarget,
-            baseWord: currentQ.baseWord,
-            form: currentQ.form,
-            userAns: uAns
-        });
-    }
+    recordList.push({
+        en: currentQ.en,
+        correctAns: currentQ.target,
+        userAns: uAns,
+        isCorrect: false
+    });
 }
 
 // ====== Event Bindings ======
 document.addEventListener('DOMContentLoaded', function() {
+    loadDefaultVocabulary().then(function() {
     document.getElementById('lang-ja').onclick = function() { currentLang = 'ja'; renderLang(); };
     document.getElementById('lang-en').onclick = function() { currentLang = 'en'; renderLang(); };
 
@@ -457,11 +461,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Review 模态窗口：点击按钮打开，点击遮罩或关闭按钮关闭
     document.getElementById('review-btn').onclick = function() {
+        renderRecordTable(); // 打开弹窗前渲染解答记录表格
         openReviewModal();
     };
 
-    // IME-aware Enter key
+    // Check 按钮状态随输入框实时联动
     var ansInput = document.getElementById('ans-input');
+    ansInput.addEventListener('input', updateActionBtnState);
+
+    // IME-aware Enter key
     var isComposing = false;
     ansInput.addEventListener('compositionstart', function() { isComposing = true; });
     ansInput.addEventListener('compositionend', function() { setTimeout(function() { isComposing = false; }, 0); });
@@ -475,14 +483,32 @@ document.addEventListener('DOMContentLoaded', function() {
 
     updateStartBtnState();
     renderLang();
-});
+    }); // end loadDefaultVocabulary
+}); // end DOMContentLoaded
 
 function updateStartBtnState() {
     var ready = !!(baseMode && subOpt);
     document.getElementById('start-quiz').disabled = !ready;
 }
 
-// ====== Review 模态窗口 ======
+// ====== Review 模态窗口：渲染解答记录表格 ======
+function renderRecordTable() {
+    var tbody = document.getElementById('recordTableBody');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    recordList.forEach(function(item, idx) {
+        var rowClass = item.isCorrect ? 'record-correct' : 'record-wrong';
+        var tr = document.createElement('tr');
+        tr.className = rowClass;
+        tr.innerHTML =
+            '<td>' + (idx + 1) + '</td>' +
+            '<td>' + item.en + '</td>' +
+            '<td>' + item.correctAns + '</td>' +
+            '<td>' + item.userAns + '</td>';
+        tbody.appendChild(tr);
+    });
+}
+
 function openReviewModal() {
     document.getElementById('review-modal').classList.add('show');
 }
@@ -501,15 +527,15 @@ function resetAllState(opts) {
     clearConfetti();
     // 复位答题按钮 DOM（Skip + Check 拆分状态）
     resetActionRow();
-    // 清空错题表 DOM 防残留
-    var tbody = document.getElementById('mistakeTableBody');
+    // 清空记录表 DOM 防残留
+    var tbody = document.getElementById('recordTableBody');
     if (tbody) tbody.innerHTML = '';
     // 重置全部运行态变量
     score = 0; attemptCount = 0; correctCount = 0; wrongCount = 0;
     answeredCount = 0;
     remainTime = totalTime;
     timeExpired = false;
-    mistakeRecordList = [];
+    recordList = [];
     questionResultShown = false;
     currentWarnKey = null;
     currentQ = null;
@@ -616,20 +642,5 @@ function showSummary() {
     clearInterval(timerId);
     switchScreen(document.getElementById('summary-page'));
     createConfetti(100);
-    document.getElementById('sumAttemptNum').innerText = attemptCount;
-    document.getElementById('sumCorrectNum').innerText = correctCount;
-    document.getElementById('sumWrongNum').innerText = wrongCount;
-    document.getElementById('sumScoreNum').innerText = score;
-    var tbody = document.getElementById('mistakeTableBody');
-    tbody.innerHTML = '';
-    mistakeRecordList.forEach(function(item, idx) {
-        var tr = document.createElement('tr');
-        tr.innerHTML =
-            '<td>' + (idx + 1) + '</td>' +
-            '<td>' + item.en + '</td>' +
-            '<td>' + item.questionText + '</td>' +
-            '<td>' + item.correctAns + '</td>' +
-            '<td>' + item.userAns + '</td>';
-        tbody.appendChild(tr);
-    });
+    // 统计逻辑保留（attemptCount / correctCount / wrongCount / score 均已在答题过程中累计，备用展示时直接读取变量即可）
 }

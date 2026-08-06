@@ -76,34 +76,10 @@
         </div>
     </div>
 
-    <!-- Summary Screen -->
+    <!-- Summary Screen（主界面暂时留空） -->
     <div class="summary-screen screen bottom-anchored slide-up" id="summary-page">
         <div class="screen-body">
-            <div class="card">
-                <div class="summary-title" data-i18n="summaryTitle"></div>
-                <div class="summary-stat-line">
-                    <span data-i18n="sumAttempt"></span><span id="sumAttemptNum"></span>
-                    &nbsp;&nbsp;
-                    <span data-i18n="sumCorrect"></span><span id="sumCorrectNum"></span>
-                    &nbsp;&nbsp;
-                    <span data-i18n="sumWrong"></span><span id="sumWrongNum"></span>
-                    &nbsp;&nbsp;
-                    <span data-i18n="sumScore"></span><span id="sumScoreNum"></span>
-                </div>
-                <h3 style="margin:24px 0 10px" data-i18n="mistakeHeader"></h3>
-                <table class="mistake-table" id="mistakeTableWrap">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th data-i18n="tblEn"></th>
-                            <th data-i18n="tblQuestion"></th>
-                            <th data-i18n="tblAnswer"></th>
-                            <th data-i18n="tblUserAns"></th>
-                        </tr>
-                    </thead>
-                    <tbody id="mistakeTableBody"></tbody>
-                </table>
-            </div>
+            <!-- 内容已移至 Review 弹窗，此处暂时留空 -->
         </div>
         <div class="screen-footer">
             <div class="summary-btn-group">
@@ -119,11 +95,25 @@
 <!-- 全局彩条层：fixed 定位覆盖整个视口，进入 summary 时飘落，退出时淡出清除 -->
 <div class="confetti-layer" id="confetti-layer"></div>
 
-<!-- Review 模态窗口：点击遮罩或关闭按钮关闭 -->
+<!-- Review 模态窗口：内含错题表格，点击遮罩或左上角叉形关闭（不含统计数据，仅备查） -->
 <div class="modal-overlay" id="review-modal" onclick="closeReviewModal()">
     <div class="modal-box" onclick="event.stopPropagation()">
-        <p class="modal-text">test</p>
-        <button class="modal-close" onclick="closeReviewModal()" data-i18n="closeBtn"></button>
+        <div class="modal-header">
+            <button class="modal-close" onclick="closeReviewModal()" aria-label="Close">×</button>
+        </div>
+        <div class="record-table-wrap">
+            <table class="record-table" id="recordTableWrap">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th data-i18n="tblEn"></th>
+                        <th data-i18n="tblAnswer"></th>
+                        <th data-i18n="tblUserAns"></th>
+                    </tr>
+                </thead>
+                <tbody id="recordTableBody"></tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -132,7 +122,7 @@
     (function() {
         var t = new Date().getTime();
         document.write('<script src="js/lang.js?t=' + t + '"><\/script>');
-        document.write('<script src="js/data.js?t=' + t + '"><\/script>');
+        document.write('<script src="js/rule.js?t=' + t + '"><\/script>');
         document.write('<script src="js/main.js?t=' + t + '"><\/script>');
     })();
 </script>
